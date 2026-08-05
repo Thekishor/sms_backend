@@ -1,0 +1,13 @@
+node_modules
+# Keep environment variables out of version control
+.env
+.env.local
+dist
+.idea
+.vscode
+.DS_Store
+logs
+*.log
+coverage
+*.tsbuildinfo
+.logs

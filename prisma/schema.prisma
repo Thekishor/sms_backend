@@ -1,0 +1,485 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model SuperAdmin {
+  id        String    @id @default(uuid(7))
+  fullName  String
+  email     String    @unique
+  password  String
+  phone     String    @unique
+  role      String    @default("SUPERADMIN")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  lastToken String?
+  expiresAt DateTime?
+
+  @@map("super_admins")
+}
+
+model Admin {
+  id           String   @id @default(uuid(7))
+  fullName     String
+  email        String   @unique
+  phone        String   @unique
+  password     String
+  address      String
+  role         Role     @default(ADMIN)
+  approvedBy   String?
+  status       Status   @default(INACTIVE)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tokenVersion Int      @default(0)
+
+  staff     Staff[]
+  companies Company[]
+
+  @@map("admins")
+}
+
+model Staff {
+  id           String   @id @default(ulid())
+  fullName     String
+  email        String   @unique
+  phone        String   @unique
+  password     String
+  address      String
+  roles        Role[]
+  permissions  String[]
+  companyId    String
+  createdBy    String
+  status       Status   @default(INACTIVE)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tokenVersion Int      @default(0)
+
+  company Company @relation(fields: [companyId], references: [id])
+  admin   Admin   @relation(fields: [createdBy], references: [id])
+
+  @@index([companyId, createdAt])
+  @@map("staff")
+}
+
+model Company {
+  id        String   @id @default(uuid(7))
+  name      String
+  email     String   @unique
+  phone     String   @unique
+  address   String
+  status    Status   @default(INACTIVE)
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  admin            Admin            @relation(fields: [createdBy], references: [id])
+  staff            Staff[]
+  students         Student[]
+  courses          Course[]
+  batches          Batch[]
+  payments         Payment[]
+  inventories      Inventory[]
+  inventoryBatches InventoryBatch[]
+  stockHistories   StockHistory[]
+  subscriptions    Subscription[]
+
+  @@unique([name, createdBy])
+  @@index([createdBy])
+  @@map("companies")
+}
+
+model Session {
+  id               String   @id @default(nanoid())
+  userId           String
+  companyId        String?
+  hashRefreshToken String?
+  userAgent        String
+  ipAddress        String
+  revoked          Boolean  @default(false)
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Student {
+  id            String   @id @default(ulid())
+  fullName      String
+  email         String
+  phone         String
+  address       String
+  guardianName  String
+  guardianPhone String
+  joiningDate   DateTime
+  status        Status   @default(ACTIVE)
+
+  batchId    String
+  courseId   String
+  companyId  String
+  feeAccount FeeAccount?
+
+  batch   Batch   @relation(fields: [batchId], references: [id])
+  course  Course  @relation(fields: [courseId], references: [id])
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments Payment[]
+
+  @@unique([email, companyId])
+  @@unique([phone, companyId])
+  @@unique([guardianPhone, companyId])
+  @@index([companyId, createdAt])
+  @@map("students")
+}
+
+model Course {
+  id          String  @id @default(uuid(7))
+  name        String
+  price       Decimal @db.Decimal(12, 2)
+  duration    String
+  description String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  companyId String
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  students Student[]
+
+  @@unique([name, companyId])
+  @@index([companyId, createdAt])
+  @@map("courses")
+}
+
+model Batch {
+  id        String   @id @default(ulid())
+  name      String
+  startDate DateTime
+  capacity  Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  companyId String
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  students Student[]
+
+  @@unique([name, companyId])
+  @@index([companyId, createdAt])
+  @@map("batches")
+}
+
+model Payment {
+  id          String   @id @default(ulid())
+  amount      Decimal  @db.Decimal(12, 2)
+  date        DateTime
+  description String?
+  studentId   String
+  companyId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@index([companyId, createdAt])
+  @@index([studentId, createdAt])
+  @@map("payments")
+}
+
+model FeeAccount {
+  id              String        @id @default(ulid())
+  studentId       String        @unique
+  companyId       String
+  totalFee        Decimal       @db.Decimal(12, 2)
+  discountType    DiscountType
+  discountValue   Decimal       @db.Decimal(12, 2)
+  discountNote    String?
+  finalFee        Decimal       @db.Decimal(12, 2)
+  paid            Decimal       @db.Decimal(12, 2)
+  remainingAmount Decimal       @db.Decimal(12, 2)
+  paymentPlan     PaymentPlan
+  paymentStatus   PaymentStatus
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@index([companyId, createdAt])
+  @@map("fee_accounts")
+}
+
+model Inventory {
+  id          String        @id @default(ulid())
+  name        String
+  sku         String
+  quantity    Int
+  description String?
+  minStock    Int
+  measures    UnitOfMeasure
+
+  companyId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+
+  company        Company          @relation(fields: [companyId], references: [id])
+  stockHistories StockHistory[]
+  batches        InventoryBatch[]
+
+  @@unique([name, companyId])
+  @@unique([sku, companyId])
+  @@index([companyId, createdAt])
+  @@map("inventories")
+}
+
+model InventoryBatch {
+  id            String    @id @default(uuid())
+  batchNumber   String
+  inventoryId   String
+  supplierId    String
+  quantity      Int
+  remainingQty  Int
+  purchasePrice Decimal   @db.Decimal(12, 2)
+  totalPrice    Decimal   @db.Decimal(12, 2)
+  purchaseDate  DateTime
+  companyId     String
+  expiryDate    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  inventory      Inventory      @relation(fields: [inventoryId], references: [id])
+  supplier       Supplier       @relation(fields: [supplierId], references: [id])
+  company        Company        @relation(fields: [companyId], references: [id])
+  stockHistories StockHistory[]
+
+  @@unique([companyId, batchNumber])
+  @@index([inventoryId])
+  @@index([supplierId])
+  @@index([companyId])
+  @@index([expiryDate])
+  @@map("inventory_batch")
+}
+
+model Supplier {
+  id        String @id @default(uuid(7))
+  name      String
+  email     String
+  phone     String
+  address   String
+  status    Status @default(ACTIVE)
+  companyId String
+
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  inventoryBatches InventoryBatch[]
+
+  @@unique([companyId, email])
+  @@unique([companyId, phone])
+  @@index([companyId])
+  @@map("suppliers")
+}
+
+model StockHistory {
+  id String @id @default(cuid(2))
+
+  inventoryId String
+  inventory   Inventory @relation(fields: [inventoryId], references: [id])
+
+  type   StockMovementType
+  reason StockMovementReason
+
+  quantity Int
+
+  remarks String?
+
+  batchId   String
+  companyId String
+
+  createdAt DateTime @default(now())
+  createdBy String
+
+  company Company        @relation(fields: [companyId], references: [id])
+  batch   InventoryBatch @relation(fields: [batchId], references: [id])
+
+  @@index([companyId])
+  @@index([batchId])
+  @@index([inventoryId, createdAt])
+  @@map("stock_history")
+}
+
+model Subscription {
+  id String @id @default(uuid(7))
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  type      SubscriptionType
+  duration  Int
+  startDate DateTime
+  endDate   DateTime
+
+  amount     Decimal @default(0) @db.Decimal(12, 2)
+  amountPaid Decimal @default(0) @db.Decimal(12, 2)
+
+  paymentStatus SubscriptionPaymentStatus @default(NOT_APPLICABLE)
+  status        SubscriptionStatus        @default(ACTIVE)
+
+  remarks String?
+
+  payments SubscriptionPayment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@map("subscription")
+}
+
+model SubscriptionPayment {
+  id String @id @default(cuid(2))
+
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+
+  amount          Decimal       @db.Decimal(12, 2)
+  paymentMethod   PaymentMethod
+  referenceNumber String?
+  paymentDate     DateTime
+
+  status PaymentStatus @default(PENDING)
+
+  verifiedById String
+  remarks      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([subscriptionId])
+  @@map("subscription_payments")
+}
+
+model Notification {
+  id          String  @id @default(nanoid())
+  recipientId String
+  title       String
+  message     String
+  isRead      Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([recipientId])
+  @@map("notifications")
+}
+
+enum SubscriptionType {
+  TRIAL
+  PAID
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum SubscriptionPaymentStatus {
+  NOT_APPLICABLE
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  QR
+  CHEQUE
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  PARTIAL
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  ACCOUNTANT
+  RECEPTIONIST
+  INSTRUCTOR
+}
+
+enum UserType {
+  SUPERADMIN
+  ADMIN
+  STAFF
+}
+
+enum Status {
+  UNVERIFIED
+  ACTIVE
+  INACTIVE
+  PENDING
+  REJECTED
+}
+
+enum OtpType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum PaymentPlan {
+  INSTALLMENT
+  ADVANCED
+  FULL
+}
+
+enum UnitOfMeasure {
+  PIECE
+  BOX
+  PACK
+  DOZEN
+  KILOGRAM
+  GRAM
+  TON
+  LITER
+  MILLILITER
+  METER
+  CENTIMETER
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
+enum StockMovementReason {
+  PURCHASE
+  ISSUE
+  RETURN
+  DAMAGE
+  LOST
+  MANUAL_ADJUSTMENT
+}
