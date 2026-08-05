@@ -9,17 +9,17 @@ import { UserType } from "@prisma/client";
 import { redisOperation } from "../utils/redis.operation.js";
 
 export const verifySuperAdminToken =
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (req: Request, _res: Response, next: NextFunction) => {
 
         try {
             const authHeader = req.headers.authorization;
 
             if (!authHeader?.startsWith("Bearer ")) {
-                throw new AppError(
+                return next(new AppError(
                     "Authentication token is missing",
                     401,
                     "UNAUTHORIZED"
-                );
+                ));
             }
 
             const token = authHeader.split(" ")[1];
@@ -78,15 +78,15 @@ export const verifySuperAdminToken =
     }
 
 export const verifyToken =
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (req: Request, _res: Response, next: NextFunction) => {
         const authHeader = req.headers.authorization;
 
         if (!authHeader?.startsWith("Bearer ")) {
-            throw new AppError(
-                "Authentication token is missing",
-                401,
-                "UNAUTHORIZED"
-            );
+            return next(new AppError(
+                    "Authentication token is missing",
+                    401,
+                    "UNAUTHORIZED"
+                ));
         }
 
         const token = authHeader.split(" ")[1];
@@ -169,7 +169,11 @@ export const verifyToken =
                 };
 
             } else {
-                throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
+                return next(new AppError(
+                    "Unauthorized",
+                    401,
+                    "UNAUTHORIZED"
+                ));
             }
 
             return next();

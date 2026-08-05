@@ -71,13 +71,14 @@ export const createCompanyService =
 
         const createdCompany = await prisma.company.create({
             data: {
-                name, email, phone, address, createdBy: adminId, status: Status.ACTIVE
+                name, email, phone, address, createdBy: adminId, status: Status.PENDING
             }
         });
 
         const subStart = new Date();
-        const subEnd = new Date(subStart.getDate() + 15);
-        let duration = Math.ceil((subStart.getTime() - subEnd.getTime()) / (1000 * 60 * 60 * 24));
+        const subEnd = new Date(subStart);
+        subEnd.setDate(subEnd.getDate() + 15);
+        let duration = Math.ceil((subEnd.getTime() - subStart.getTime()) / (1000 * 60 * 60 * 24));
 
         await prisma.subscription.create({
             data: {

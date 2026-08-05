@@ -53,8 +53,6 @@ export const OTP_TEMPLATE = (
       For your security, never share this OTP with anyone.
     </p>
 
-    <hr style="margin:0 0 16px;border:none;border-top:1px solid #E5E7EB;">
-
   </div>
 
 </div>
@@ -97,8 +95,6 @@ export const SUBSCRIPTION_REMINDER_TEMPLATE = (
     <p style="margin:0 0 20px;color:#4B5563;font-size:15px;line-height:1.6;">
       ${message}
     </p>
-
-    <hr style="border:none;border-top:1px solid #E5E7EB;margin:20px 0;">
 
   </div>
 

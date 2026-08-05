@@ -173,7 +173,7 @@ export const verifyAccount =
         const updatedAdmin = await prisma.admin.update({
             where: { email },
             data: {
-                status: Status.PENDING
+                status: Status.ACTIVE
             }
         });
 
