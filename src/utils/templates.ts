@@ -55,10 +55,6 @@ export const OTP_TEMPLATE = (
 
     <hr style="margin:0 0 16px;border:none;border-top:1px solid #E5E7EB;">
 
-    <p style="margin:0;font-size:12px;color:#9CA3AF;text-align:center;">
-      © 2026 NavaTech &amp; Media Pvt. Ltd.
-    </p>
-
   </div>
 
 </div>
@@ -103,10 +99,6 @@ export const SUBSCRIPTION_REMINDER_TEMPLATE = (
     </p>
 
     <hr style="border:none;border-top:1px solid #E5E7EB;margin:20px 0;">
-
-    <p style="margin:0;text-align:center;font-size:13px;color:#9CA3AF;">
-      © 2026 NavaTech &amp; Media Pvt. Ltd.
-    </p>
 
   </div>
 

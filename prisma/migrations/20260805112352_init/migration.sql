@@ -26,7 +26,7 @@ CREATE TYPE "Status" AS ENUM ('UNVERIFIED', 'ACTIVE', 'INACTIVE', 'PENDING', 'RE
 CREATE TYPE "OtpType" AS ENUM ('EMAIL_VERIFICATION', 'PASSWORD_RESET');
 
 -- CreateEnum
-CREATE TYPE "PaymentPlan" AS ENUM ('INSTALLMENT', 'ADVANCDE', 'FULL');
+CREATE TYPE "PaymentPlan" AS ENUM ('INSTALLMENT', 'ADVANCED', 'FULL');
 
 -- CreateEnum
 CREATE TYPE "UnitOfMeasure" AS ENUM ('PIECE', 'BOX', 'PACK', 'DOZEN', 'KILOGRAM', 'GRAM', 'TON', 'LITER', 'MILLILITER', 'METER', 'CENTIMETER');
@@ -309,6 +309,19 @@ CREATE TABLE "subscription_payments" (
     CONSTRAINT "subscription_payments_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "notifications" (
+    "id" TEXT NOT NULL,
+    "recipientId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "notifications_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "super_admins_email_key" ON "super_admins"("email");
 
@@ -429,6 +442,9 @@ CREATE INDEX "subscription_companyId_idx" ON "subscription"("companyId");
 -- CreateIndex
 CREATE INDEX "subscription_payments_subscriptionId_idx" ON "subscription_payments"("subscriptionId");
 
+-- CreateIndex
+CREATE INDEX "notifications_recipientId_idx" ON "notifications"("recipientId");
+
 -- AddForeignKey
 ALTER TABLE "staff" ADD CONSTRAINT "staff_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -445,7 +461,7 @@ ALTER TABLE "students" ADD CONSTRAINT "students_batchId_fkey" FOREIGN KEY ("batc
 ALTER TABLE "students" ADD CONSTRAINT "students_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "courses"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "students" ADD CONSTRAINT "students_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "students" ADD CONSTRAINT "students_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "courses" ADD CONSTRAINT "courses_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
