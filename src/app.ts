@@ -16,9 +16,6 @@ import "./jobs/scheduler.js"
 
 const app = express();
 
-// enable helmet early in the middleware stack
-app.use(helmet());
-
 //cors config
 const allowedOrigins = new Set([
     process.env.CORS_ORIGIN,
@@ -51,6 +48,7 @@ app.use(cookieParser());
 
 // Request logging middleware
 app.use((req, res, next) => {
+    
     const start = Date.now();
 
     if (!req.originalUrl.startsWith("/api/v1")) {

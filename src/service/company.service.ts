@@ -175,6 +175,7 @@ export const getAllCompaniesService =
                             id: true,
                             type: true,
                             status: true,
+                            startDate: true,
                             endDate: true
                         }
                     }

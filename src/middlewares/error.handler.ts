@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { Prisma } from "@prisma/client";
 import AppError from "../utils/AppError.js";
 
-const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
+const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
 
     // custom error handling
     if (err instanceof AppError) {
@@ -65,4 +65,5 @@ const errorHandler = (err: Error, req: Request, res: Response, next: NextFunctio
     });
 
 }
+
 export default errorHandler;

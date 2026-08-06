@@ -5,7 +5,7 @@ import { prisma } from '../config/prisma.js';
 import { SubscriptionStatus } from '@prisma/client';
 
 export const requireSubscription =
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (req: Request, _res: Response, next: NextFunction) => {
         try {
 
             const companyId = req.companyId;

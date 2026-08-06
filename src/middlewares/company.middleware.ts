@@ -71,7 +71,6 @@ export const requireCompany =
                 }
 
                 req.companyId = companyId;
-
                 return next();
 
             } else {
