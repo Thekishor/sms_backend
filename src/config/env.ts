@@ -15,10 +15,7 @@ const envSchema = z.object({
     JWT_REFRESH_SECRET: z.string(),
     ACCESS_TOKEN_EXPIRY: z.string(),
     REFRESH_TOKEN_EXPIRY: z.string(),
-    REDIS_HOST: z.string(),
-    REDIS_PORT: z.string(),
-    REDIS_PASSWORD: z.string(),
-    REDIS_USERNAME: z.string(),
+    REDIS_URL: z.string(),
 })
 
 export const env = envSchema.parse(process.env);

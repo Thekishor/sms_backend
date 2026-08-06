@@ -3,12 +3,9 @@ import logger, { logError } from "./logger.js";
 import { env } from "./env.js";
 
 export const redis = createClient({
-    username: env.REDIS_USERNAME,
-    password: env.REDIS_PASSWORD,
+    url: env.REDIS_URL,
     disableOfflineQueue: true,
     socket: {
-        host: env.REDIS_HOST,
-        port: Number(env.REDIS_PORT),
         connectTimeout: 10000,
         reconnectStrategy: (retries) => {
             return Math.min(retries * 200, 5000);
