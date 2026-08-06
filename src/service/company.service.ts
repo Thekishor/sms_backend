@@ -289,6 +289,7 @@ export const getAllCompanies =
                             id: true,
                             type: true,
                             status: true,
+                            startDate: true,
                             endDate: true
                         }
                     }

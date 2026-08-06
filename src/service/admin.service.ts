@@ -124,8 +124,12 @@ export const register =
         try {
             otp = await generateOtpAndStoreInRedis(email, OtpType.EMAIL_VERIFICATION);
         } catch {
-            // Redis is down — roll back the created admin so the user can retry registration
-            await prisma.admin.delete({ where: { id: registerAdmin.id } });
+            await prisma.admin.delete({
+                 where: { 
+                    id: registerAdmin.id
+                 } 
+                });
+                
             throw new AppError(
                 "Registration service is temporarily unavailable. Please try again shortly.",
                 503,

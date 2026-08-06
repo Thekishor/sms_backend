@@ -16,14 +16,7 @@ export const createFeeAccount =
             feeAccount: FeeAccountResponseDto["feeAccount"];
         }> => {
 
-        const {
-            studentId,
-            discountType,
-            discountValue,
-            discountNote,
-            paymentStatus,
-            paymentPlan
-        } = data;
+        const { studentId, discountType, discountValue, discountNote, paymentStatus, paymentPlan} = data;
 
         // verify student
         const student = await verifyStudent(studentId, companyId);

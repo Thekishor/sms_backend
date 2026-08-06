@@ -27,6 +27,12 @@ export const createStudentService =
             guardianName, guardianPhone, batchId, courseId
         } = data;
 
+         // verify batch
+        await verifyBatch(batchId, companyId);
+
+        // verify course
+        await verifyCourse(courseId, companyId);
+
         const existsStudent = await prisma.student.findFirst({
             where: {
                 companyId,
@@ -59,12 +65,6 @@ export const createStudentService =
                 "ACCOUNT_NOT_ACTIVE"
             )
         }
-
-        // verify batch
-        await verifyBatch(batchId, companyId);
-
-        // verify course
-        await verifyCourse(courseId, companyId);
 
         const student = await prisma.student.create({
             data: {
