@@ -68,12 +68,14 @@ export const getNotificationsForUser =
     ) => {
 
         const [notifications, total] = await Promise.all([
+
             prisma.notification.findMany({
-                where: { recipientId },
+                where: { recipientId, isRead: false },
                 orderBy: { createdAt: "desc" },
                 skip,
                 take,
             }),
+            
             prisma.notification.count({
                 where: { recipientId }
             })
@@ -89,20 +91,22 @@ export const markAsRead =
     ) => {
 
         const notification = await prisma.notification.findUnique({
-            where: { id: notificationId }
+            where: { 
+                id: notificationId,
+                recipientId
+            }
         });
 
         if (!notification) {
             throw new AppError("Notification not found", 404, "NOTIFICATION_NOT_FOUND");
         }
 
-        if (notification.recipientId !== recipientId) {
-            throw new AppError("Unauthorized to update this notification", 403, "FORBIDDEN");
-        }
-
         const updated = await prisma.notification.update({
             where: { id: notificationId },
-            data: { isRead: true }
+            data: { 
+                isRead: true,
+                readAt: new Date(),
+            }
         });
 
         return updated;
@@ -112,9 +116,19 @@ export const markAllAsRead =
     async (recipientId: string) => {
 
         const result = await prisma.notification.updateMany({
-            where: { recipientId, isRead: false },
-            data: { isRead: true }
+            where: { 
+                recipientId,
+                isRead: false 
+            },
+            data: {
+                isRead: true, 
+                readAt: new Date(),
+            }
         });
+
+        if (result.count === 0) {
+            throw new AppError("Notification not found", 404, "NOTIFICATION_NOT_FOUND");
+        }
 
         return result;
     };

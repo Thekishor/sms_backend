@@ -13,6 +13,7 @@ import { openApiDocument } from './docs/openapi.js';
 import swaggerUi from "swagger-ui-express";
 import companyRoutes from "./routes/company.routes.js";
 import "./jobs/scheduler.js"
+import AppError from './utils/AppError.js';
 
 const app = express();
 
@@ -30,7 +31,7 @@ app.use(
                 return callback(null, true);
             }
 
-            callback(new Error("Not allowed by CORS"));
+            callback(new AppError(`Origin ${origin} is not allowed by CORS`, 403, "CORS_ERROR"));
         },
         credentials: true,
     })

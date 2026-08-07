@@ -4,9 +4,12 @@ import { SocketStore } from "./socketStore.js";
 
 export class SocketHandler {
 
+    // listening on 'io' (server level)
     public static register(io: Server): void {
         io.on("connection", (socket: Socket) => {
             logger.info(`Client connected: ${socket.id}`);
+            logger.info(`Client Auth Token: ${socket.handshake.auth.Token}`);
+            logger.info(`Client IP: ${socket.handshake.address}`);
 
             this.handleIdentify(socket);
             this.handleDisconnect(socket);

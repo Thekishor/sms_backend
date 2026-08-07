@@ -292,18 +292,15 @@ model Supplier {
 }
 
 model StockHistory {
-  id String @id @default(cuid(2))
-
+  id          String    @id @default(cuid(2))
   inventoryId String
   inventory   Inventory @relation(fields: [inventoryId], references: [id])
 
   type   StockMovementType
   reason StockMovementReason
 
-  quantity Int
-
-  remarks String?
-
+  quantity  Int
+  remarks   String?
   batchId   String
   companyId String
 
@@ -371,16 +368,18 @@ model SubscriptionPayment {
 }
 
 model Notification {
-  id          String  @id @default(nanoid())
+  id          String    @id @default(nanoid())
   recipientId String
   title       String
   message     String
-  isRead      Boolean @default(false)
+  isRead      Boolean   @default(false)
+  readAt      DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([recipientId])
+  @@index([recipientId, isRead])
   @@map("notifications")
 }
 

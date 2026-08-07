@@ -301,7 +301,7 @@ CREATE TABLE "subscription_payments" (
     "referenceNumber" TEXT,
     "paymentDate" TIMESTAMP(3) NOT NULL,
     "status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
-    "verifiedById" TEXT NOT NULL,
+    "verifiedBy" TEXT NOT NULL,
     "remarks" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -316,6 +316,7 @@ CREATE TABLE "notifications" (
     "title" TEXT NOT NULL,
     "message" TEXT NOT NULL,
     "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "readAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -444,6 +445,9 @@ CREATE INDEX "subscription_payments_subscriptionId_idx" ON "subscription_payment
 
 -- CreateIndex
 CREATE INDEX "notifications_recipientId_idx" ON "notifications"("recipientId");
+
+-- CreateIndex
+CREATE INDEX "notifications_recipientId_isRead_idx" ON "notifications"("recipientId", "isRead");
 
 -- AddForeignKey
 ALTER TABLE "staff" ADD CONSTRAINT "staff_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
