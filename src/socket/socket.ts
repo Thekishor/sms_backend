@@ -11,7 +11,6 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
                 process.env.CORS_ORIGIN ||
                 "http://localhost:5173",
                 "http://localhost:5001",
-                "http://localhost:3000",
             ],
             credentials: true,
         },

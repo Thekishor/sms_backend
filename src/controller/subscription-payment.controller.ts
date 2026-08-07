@@ -2,11 +2,12 @@ import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { logError } from "../config/logger.js";
 import AppError from "../utils/AppError.js";
-import { paginationSchema, subscriptionPaymentSchema } from "../schemas/request/request.dto.js";
+import { paginationSchema } from "../schemas/request/request.dto.js";
 import { requireSuperAdmin } from "../utils/request.util.js";
 import {
     getAllSubscriptionPaymentsService,
-    getSubscriptionPaymentService,
+    getSubscriptionByPaymentService,
+    getSubscriptionPaymentByIdService,
     getSubscriptionPaymentsService,
     subscriptionPaymentService
 } from "../service/subscription-payment.service.js";
@@ -18,21 +19,11 @@ export const createSubscriptionPayment =
 
             const subscriptionId = req.params.id;
             const superAdminId = requireSuperAdmin(req);
-            const result = subscriptionPaymentSchema.safeParse(req.body);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
 
             const { subscriptionPayment } = await subscriptionPaymentService(
                 subscriptionId,
                 superAdminId,
-                result.data
+                req.body
             )
 
             return res.status(200).send({
@@ -42,6 +33,28 @@ export const createSubscriptionPayment =
 
         } catch (err) {
             logError("Failed to create subscription payment", err);
+            return next(err);
+        }
+    }
+
+export const getSubscriptionPaymentById =
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+
+            const subscriptionId = req.params.id;
+
+            const { subscriptionPayment, } = await getSubscriptionPaymentByIdService(
+                subscriptionId
+            );
+
+            return res.status(200).send({
+                message: "Subscription payment retrieved successfully",
+                subscriptionPayment
+            });
+
+        }
+        catch (err) {
+            logError("Failed to get subscription payment", err);
             return next(err);
         }
     }
@@ -84,13 +97,13 @@ export const getSubscriptionPayments =
         }
     }
 
-export const getSubscriptionPayment =
+export const getSubscriptionByPaymentId =
     async (req: Request, res: Response, next: NextFunction) => {
         try {
 
             const subscriptionPaymentId = req.params.id;
 
-            const { subscriptionPayment } = await getSubscriptionPaymentService(
+            const { subscriptionPayment } = await getSubscriptionByPaymentService(
                 subscriptionPaymentId
             );
 

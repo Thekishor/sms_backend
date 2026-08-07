@@ -24,7 +24,6 @@ import {
 import {
     cancelTrialSubscription,
     getActiveCompanySubscriptionByAdmin,
-    payCompanySubscription
 } from "../controller/subscription.controller.js";
 import { registerRateLimiter } from "../config/rate-limiter.js";
 import { requireSubscription } from "../middlewares/subscription.middleware.js";
@@ -116,7 +115,6 @@ router.delete("/companies/:id", verifyToken, validateParams(paramsSchema), delet
 /* company subscriptions (admin) */
 router.get("/companies/:id/subscription", verifyToken, getActiveCompanySubscriptionByAdmin);
 router.patch("/companies/:id/subscription/cancel-trial", verifyToken, cancelTrialSubscription);
-router.post("/companies/:id/subscription/pay", verifyToken, payCompanySubscription);
 
 /* staff */
 

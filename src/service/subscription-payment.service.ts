@@ -4,7 +4,6 @@ import {
     PaymentStatus,
     SubscriptionType,
     SubscriptionPaymentStatus,
-    SubscriptionStatus,
     SubscriptionPayment
 } from "@prisma/client";
 import { prisma } from "../config/prisma.js";
@@ -25,12 +24,13 @@ export const subscriptionPaymentService =
         subscriptionPayment: SubscriptionPaymentResponseDto["subscriptionPayment"]
     }> => {
 
-        const { amount, paymentMethod, referenceNumber, remarks } = data;
+        const { amount, paymentMethod, referenceNumber, remarks, month } = data;
+        let startDate: Date = new Date();
+        let newEndDate: Date;
 
-        const subscription = await prisma.subscription.findFirst({
+        const subscription = await prisma.subscription.findUnique({
             where: {
                 id: subscriptionId,
-                status: SubscriptionStatus.ACTIVE
             }
         });
 
@@ -38,13 +38,13 @@ export const subscriptionPaymentService =
             throw new AppError("Subscription not found", 404, "SUBSCRIPTION_NOT_FOUND");
         }
 
-        if (subscription.type === SubscriptionType.TRIAL) {
-            throw new AppError(
-                "Trial subscriptions cannot accept payments.",
-                400,
-                "TRIAL_SUBSCRIPTIONS_CANNOT_BE_PAID"
-            );
+        if (subscription.endDate >= new Date()) {
+            newEndDate = new Date(subscription.endDate);
+        } else {
+            newEndDate = new Date(startDate);
         }
+
+        newEndDate.setMonth(newEndDate.getMonth() + month);
 
         if (subscription.paymentStatus === SubscriptionPaymentStatus.PAID) {
             throw new AppError("Subscription is already paid", 400, "SUBSCRIPTION_ALREADY_PAID");
@@ -64,20 +64,7 @@ export const subscriptionPaymentService =
 
         const paymentAmount = new Prisma.Decimal(amount);
 
-        const remainingBalance = subscription.amount.minus(subscription.amountPaid);
-
-        if (paymentAmount.gt(remainingBalance)) {
-            throw new AppError(
-                "Payment amount cannot exceed the remaining balance.",
-                400,
-                "PAYMENT_AMOUNT_EXCEEDS_REMAINING_BALANCE"
-            );
-        }
-
-        const paymentStatus: PaymentStatus =
-            paymentAmount.eq(remainingBalance)
-                ? PaymentStatus.PAID
-                : PaymentStatus.PARTIAL;
+        let duration = Math.ceil((startDate.getTime() - newEndDate.getTime()) / (1000 * 60 * 60 * 24));
 
         return await prisma.$transaction(async (tx) => {
 
@@ -88,37 +75,23 @@ export const subscriptionPaymentService =
                     paymentMethod,
                     referenceNumber,
                     paymentDate: new Date(),
-                    status: paymentStatus,
-                    verifiedById: superAdminId,
+                    status: PaymentStatus.PAID,
+                    verifiedBy: superAdminId,
                     remarks
                 }
             });
-
-            // Accumulate: total paid so far + this payment
-            const newAmountPaid = subscription.amountPaid.plus(paymentAmount);
-            const remainingAmount = subscription.amount.minus(subscription.amountPaid);
-
-            let subscriptionPaymentStatus: SubscriptionPaymentStatus;
-
-            if (paymentAmount.eq(remainingAmount)) {
-                subscriptionPaymentStatus = SubscriptionPaymentStatus.PAID;
-            } else if (paymentAmount.lt(remainingAmount)) {
-                subscriptionPaymentStatus = SubscriptionPaymentStatus.PARTIALLY_PAID;
-            } else {
-                throw new AppError(
-                    "Payment amount cannot exceed the remaining balance.",
-                    400,
-                    "PAYMENT_AMOUNT_EXCEEDS_REMAINING_BALANCE"
-                );
-            }
 
             await tx.subscription.update({
                 where: {
                     id: subscriptionId,
                 },
                 data: {
-                    amountPaid: newAmountPaid,
-                    paymentStatus: subscriptionPaymentStatus
+                    type: SubscriptionType.PAID,
+                    startDate: startDate,
+                    endDate: newEndDate,
+                    duration,
+                    amountPaid: paymentAmount,
+                    paymentStatus: SubscriptionPaymentStatus.PAID
                 }
             });
 
@@ -131,6 +104,52 @@ export const subscriptionPaymentService =
             };
         })
 
+    }
+
+export const getSubscriptionPaymentByIdService =
+    async (subscriptionId: string):
+        Promise<{
+            subscriptionPayment: SubscriptionPaymentResponseDto["subscriptionPayment"]
+        }> => {
+
+        const subscription = await prisma.subscription.findUnique({
+            where: {
+                id: subscriptionId,
+            }
+        });
+
+        if (!subscription) {
+            throw new AppError("Subscription not found", 404, "SUBSCRIPTION_NOT_FOUND");
+        }
+
+        const subscriptionPayment = await prisma.subscriptionPayment.findFirst({
+            where: { subscriptionId },
+            orderBy: { createdAt: "desc" },
+            select: {
+                id: true,
+                subscriptionId: true,
+                amount: true,
+                paymentMethod: true,
+                referenceNumber: true,
+                paymentDate: true,
+                status: true,
+                verifiedBy: true,
+                createdAt: true,
+                updatedAt: true
+            }
+        });
+
+        if (!subscriptionPayment) {
+            throw new AppError("Subscription payment not found", 404, "SUBSCRIPTION_PAYMENT_NOT_FOUND");
+        }
+
+        return {
+            subscriptionPayment: {
+                ...subscriptionPayment,
+                verifiedBy: subscriptionPayment?.verifiedBy?.toString(),
+                amount: subscriptionPayment?.amount.toString()
+            }
+        }
     }
 
 export const getSubscriptionPaymentsService =
@@ -212,7 +231,7 @@ export const getSubscriptionPaymentsService =
         }
     }
 
-export const getSubscriptionPaymentService =
+export const getSubscriptionByPaymentService =
     async (
         subscriptionPaymentId: string
     ): Promise<{
@@ -280,7 +299,7 @@ export const getAllSubscriptionPaymentsService =
                     referenceNumber: true,
                     paymentDate: true,
                     status: true,
-                    verifiedById: true,
+                    verifiedBy: true,
                     createdAt: true,
                     updatedAt: true
                 }
@@ -295,7 +314,7 @@ export const getAllSubscriptionPaymentsService =
         const subscriptionPayments = rawSubscriptionPayments.map(subscriptionPayment => ({
             ...subscriptionPayment,
             amount: subscriptionPayment.amount.toString(),
-            verifiedBy: subscriptionPayment.verifiedById
+            verifiedBy: subscriptionPayment.verifiedBy
         }));
 
         // set to redis 
@@ -320,7 +339,7 @@ export function mapSubscriptionPayment(subscriptionPayment: SubscriptionPayment)
         referenceNumber: subscriptionPayment.referenceNumber,
         paymentDate: subscriptionPayment.paymentDate,
         status: subscriptionPayment.status,
-        verifiedBy: subscriptionPayment.verifiedById,
+        verifiedBy: subscriptionPayment.verifiedBy,
         createdAt: subscriptionPayment.createdAt,
         updatedAt: subscriptionPayment.updatedAt
     };

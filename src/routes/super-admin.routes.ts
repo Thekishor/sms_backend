@@ -16,18 +16,17 @@ import {
     getCompaniesWithAdmin
 } from "../controller/admin.controller.js";
 import {
-    createSubscription,
     getActiveCompanySubscriptions,
     getAllSubscriptions,
     getCompanySubscriptions,
     sendReminderMail,
     updateSubscription,
-    changeCompanySubscriptionType
 } from "../controller/subscription.controller.js";
 import {
     createSubscriptionPayment,
     getAllSubscriptionPayments,
-    getSubscriptionPayment,
+    getSubscriptionByPaymentId,
+    getSubscriptionPaymentById,
     getSubscriptionPayments
 } from "../controller/subscription-payment.controller.js";
 import {
@@ -35,8 +34,8 @@ import {
     updateAllNotificationsReadStatus,
     updateNotificationReadStatus
 } from "../controller/notification.controller.js";
-import { validateParams } from "../middlewares/validate.middleware.js";
-import { paramsSchema } from "../schemas/request/request.dto.js";
+import { validateParams, validateRequest } from "../middlewares/validate.middleware.js";
+import { paramsSchema, subscriptionPaymentSchema } from "../schemas/request/request.dto.js";
 
 const router = Router();
 
@@ -71,17 +70,8 @@ router.patch(
     changedCompanyStatus
 );
 
-//change company sub type
-router.patch(
-    "/companies/:id/subscription-type",
-    verifySuperAdminToken,
-    validateParams(paramsSchema),
-    changeCompanySubscriptionType
-);
-
 /* companies subscription */
 router.get("/subscriptions", verifySuperAdminToken, getAllSubscriptions);
-router.post("/companies/:id/subscriptions", verifySuperAdminToken, createSubscription);
 
 // send subscription reminder mail to company by super admin
 router.post(
@@ -116,9 +106,41 @@ router.patch(
 );
 
 /* company subscription payment */
-router.post("/subscriptions/:id/payments", verifySuperAdminToken, createSubscriptionPayment);
-router.get("/subscriptions/:id/payments", verifySuperAdminToken, getSubscriptionPayments);
-router.get("/subscriptions/payments/:id", verifySuperAdminToken, getSubscriptionPayment);
+
+// create paid subscription after full payment
+router.post(
+    "/subscriptions/:id/payments", 
+    verifySuperAdminToken, 
+    validateParams(paramsSchema), 
+    validateRequest(subscriptionPaymentSchema), 
+    createSubscriptionPayment
+);
+
+// get single or latest payment of subscription
+router.get(
+    "/subscriptions/:id/payments", 
+    verifySuperAdminToken, 
+    validateParams(paramsSchema),
+    getSubscriptionPaymentById
+);
+
+// get all payment records of subscription
+router.get(
+    "/subscriptions/:id/payments",
+    verifySuperAdminToken,
+    validateParams(paramsSchema),
+    getSubscriptionPayments
+);
+
+// get subscription payment by payment id
+router.get(
+    "/subscriptions/payments/:id", 
+    verifySuperAdminToken, 
+    validateParams(paramsSchema),
+    getSubscriptionByPaymentId
+);
+
+// get all subscription related payments
 router.get("/subscriptions/payments", verifySuperAdminToken, getAllSubscriptionPayments);
 
 /* notifications */

@@ -440,6 +440,11 @@ export const subscriptionSchema = z.object({
 })
 
 export const subscriptionPaymentSchema = z.object({
+    month: z.coerce
+        .number()
+        .int("Month must be a whole number.")
+        .min(1, "Minimum subscription duration is 1 month.")
+        .max(12, "Maximum subscription duration is 12 months."),
     amount: amountField,
     paymentMethod: z.enum(PaymentMethod).openapi({
         example: "CASH or BANK_TRANSFER or QR or CHEQUE or OTHER"
