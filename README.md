@@ -154,10 +154,7 @@ Make sure you have the following installed on your machine:
    DATABASE_URL="postgresql://user:password@host:port/dbname?sslmode=require"
 
    # Redis Configuration
-   REDIS_HOST=localhost
-   REDIS_PORT=6379
-   REDIS_USERNAME=default
-   REDIS_PASSWORD=your_redis_password
+   REDIS_URL=""
 
    # Email service
    RESEND_API_KEY=re_your_resend_api_key
