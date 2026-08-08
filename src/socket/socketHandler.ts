@@ -12,32 +12,21 @@ export class SocketHandler {
             logger.info(`Client Auth Token: ${socket.handshake.auth.Token}`);
             logger.info(`Client IP: ${socket.handshake.address}`);
 
-            this.handleIdentify(socket);
             this.handleError(socket);
             this.handleDisconnect(socket);
         });
     }
 
-    private static handleIdentify(socket: Socket): void {
-        socket.on("identify", ({ userId }: IdentifyPayload) => {
-            logger.info(`Identify: ${userId} -> ${socket.id}`);
-
-            SocketStore.addUser(
-                userId,
-                socket.id
-            );
-        });
-    }
-
     private static handleError(socket: Socket): void {
         socket.on("error", (err) => {
-            logger.error(`Error: ${err.message}: ${socket.handshake.address}`);
+            logger.error(`Error: ${err.message}: Client Address:${socket.handshake.address}`);
         })
     }
 
     private static handleDisconnect(socket: Socket): void {
         socket.on("disconnect", () => {
             const userId = SocketStore.getUserId(socket.id);
+            
             if (userId) {
                 SocketStore.removeUser(userId);
 
@@ -45,8 +34,4 @@ export class SocketHandler {
             logger.info(`Client disconnected: ${socket.id}`);
         });
     }
-}
-
-interface IdentifyPayload {
-    userId: string;
 }

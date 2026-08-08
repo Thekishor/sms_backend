@@ -9,20 +9,17 @@ export class RealtimeService {
         io.emit(event, data);
     }
 
-    public static notifyAdmin(
-        adminId: string,
-        event: string,
-        data: unknown
-    ): void {
+    public static notifyAdmin(adminId: string, event: string, data: unknown): void {
         const io = getIO();
 
-        const socketId = SocketStore.getSocketId(adminId);
+        const sockets = SocketStore.getSocketIds(adminId);
         logger.info(`Looking for socket of admin: ${adminId}`);
-        logger.info(socketId);
 
-        if (socketId) {
+        if (sockets) {
             // Admin is online
-            io.to(socketId).emit(event, data);
+            sockets.forEach((socketId) => {
+                io.to(socketId).emit(event, data);
+            });
         } else {
             logger.warn("Unable to send events to admin due to offline mode");
         }

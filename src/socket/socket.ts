@@ -1,8 +1,8 @@
 import { Server, Socket } from "socket.io";
 import { Server as HttpServer } from "node:http";
 import AppError from "../utils/AppError.js";
-import { env } from "../config/env.js";
-import { verifyJwtToken } from "../utils/jwt.tokens.js";
+import { authenticateSocketToken } from "./auth.socket.js";
+import { SocketStore } from "./socketStore.js";
 
 let io: Server;
 
@@ -26,19 +26,25 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
                 throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
             }
 
-            let payload;
+            const { payload } = authenticateSocketToken(token);
 
-            payload = verifyJwtToken(token, env.SUPERADMIN_JWT_ACCESS_SECRET);
+            const { sub, sid, type, version } = payload;
 
-            if (payload.role === 'SUPERADMIN') {
-                socket.data.superadmin = payload;
-            } else {
-                payload = verifyJwtToken(token, env.JWT_ACCESS_SECRET);
-                socket.data.user = payload;
+            if (!sub || !sid || !type || typeof version !== "number") {
+                throw new AppError("Invalid token payload", 401, "INVALID_TOKEN");
             }
+
+            socket.data.user = payload;
+
+            SocketStore.addUser(
+                sub,
+                socket.id
+            );
+
             next();
+
         } catch {
-            next(new AppError("Unauthorized", 401, "UNAUTHORIZED"));
+            return next(new AppError("Unauthorized", 401, "UNAUTHORIZED"));
         }
     });
 
