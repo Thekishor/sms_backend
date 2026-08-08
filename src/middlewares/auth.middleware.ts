@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import AppError from "../utils/AppError.js";
+import AppError, { STATUS_ERROR } from "../utils/AppError.js";
 import { verifyJwtToken } from "../utils/jwt.tokens.js";
 import { prisma } from "../config/prisma.js";
 import { equalHashToken } from "../utils/hash.js";
 import { env } from "../config/env.js"
 import { logError } from "../config/logger.js";
-import { UserType } from "@prisma/client";
+import { Status, UserType } from "@prisma/client";
 import { redisOperation } from "../utils/redis.operation.js";
 
 export const verifySuperAdminToken =
@@ -83,10 +83,10 @@ export const verifyToken =
 
         if (!authHeader?.startsWith("Bearer ")) {
             return next(new AppError(
-                    "Authentication token is missing",
-                    401,
-                    "UNAUTHORIZED"
-                ));
+                "Authentication token is missing",
+                401,
+                "UNAUTHORIZED"
+            ));
         }
 
         const token = authHeader.split(" ")[1];
@@ -113,6 +113,14 @@ export const verifyToken =
 
                 if (!admin || admin.tokenVersion !== payload.version) {
                     throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
+                }
+
+                if (admin.status !== Status.ACTIVE) {
+                    throw new AppError(
+                        STATUS_ERROR[admin.status],
+                        403,
+                        "ACCOUNT_NOT_ACTIVE"
+                    );
                 }
 
                 req.admin = {
@@ -143,6 +151,14 @@ export const verifyToken =
 
                 if (!staff || staff.tokenVersion !== payload.version) {
                     throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
+                }
+
+                if (staff.status !== Status.ACTIVE) {
+                    throw new AppError(
+                        STATUS_ERROR[staff.status],
+                        403,
+                        "ACCOUNT_NOT_ACTIVE"
+                    );
                 }
 
                 req.staff = {
