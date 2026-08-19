@@ -9,10 +9,9 @@ import {
 import AppError, { STATUS_ERROR } from "../utils/AppError.js";
 import { checkPassword, hashPassword } from "../utils/hash.js";
 import { Admin, OtpType, Prisma, Role, Status } from "@prisma/client";
-import { sendEmail } from "./email.service.js";
 import { generateOtp } from "../utils/code.generate.js";
-import { EMAIL_TEMPLATES, OTP_TEMPLATE } from "../utils/templates.js";
-import { AttemptOtpCount } from "../dto/UserDto.js";
+import { EMAIL_TEMPLATES } from "../utils/templates.js";
+import { AttemptOtpCount } from "../types/UserDto.js";
 import logger from "../config/logger.js";
 import {
     AdminResponseDto, AdminsResponseDto,
@@ -21,6 +20,7 @@ import {
 import { redisOperation } from "../utils/redis.operation.js";
 import { mapCompany } from "./company.service.js";
 import { createNotificationForAdmin, createNotificationForSuperAdmin } from "./notification.service.js";
+import { sendEmailToAdmin } from "./email.service.js";
 
 export const register =
     async (data: CreateAdminDto):
@@ -673,16 +673,4 @@ export function mapAdmin(admin: Admin) {
         createdAt: admin.createdAt,
         updatedAt: admin.updatedAt
     }
-}
-
-async function sendEmailToAdmin(
-    subject: string,
-    title: string,
-    message: string,
-    expiry: string,
-    email: string,
-    otp: string
-) {
-    const html = OTP_TEMPLATE(title, message, otp, expiry);
-    await sendEmail(email, subject, html);
 }

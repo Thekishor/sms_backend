@@ -3,7 +3,7 @@ import { prisma } from '../../config/prisma.js';
 import logger, { logError } from '../../config/logger.js';
 import { SubscriptionStatus } from '@prisma/client';
 import { EMAIL_TEMPLATES, SUBSCRIPTION_REMINDER_TEMPLATE } from '../../utils/templates.js';
-import { sendEmail } from '../../service/email.service.js';
+import { sendEmail } from '../../config/mail.config.js';
 
 // Runs every day at 1:20 PM corn jobs
 cron.schedule('20 13 * * *', async () => {
