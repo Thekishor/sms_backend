@@ -13,6 +13,7 @@ import { openApiDocument } from './docs/openapi.js';
 import swaggerUi from "swagger-ui-express";
 import companyRoutes from "./routes/company.routes.js";
 import "./jobs/scheduler.js"
+import compression from "compression";
 import AppError from './utils/AppError.js';
 
 const app = express();
@@ -40,11 +41,14 @@ app.use(
 // helmet after cors so it doesn't interfere with CORS headers
 app.use(helmet());
 
+app.use(compression());
+
 // Body parsing middleware and request body size limits
 app.use(express.json({
     limit: "50kb"
 }));
 
+//Reduce the size of HTTP responses before sending them to the client
 app.use(cookieParser());
 
 // Request logging middleware
@@ -64,17 +68,6 @@ app.use((req, res, next) => {
             statusCode: res.statusCode,
             duration: `${Date.now() - start}ms`,
             type: "finish"
-        });
-    });
-
-    res.on("close", () => {
-        logger.warn("HTTP Request Aborted", {
-            method: req.method,
-            url: req.originalUrl,
-            ip: req.ip,
-            statusCode: res.statusCode,
-            duration: `${Date.now() - start}ms`,
-            type: "close"
         });
     });
 

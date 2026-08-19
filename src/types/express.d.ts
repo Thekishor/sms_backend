@@ -1,6 +1,4 @@
-import { UUID } from "crypto";
 import "express-serve-static-core";
-
 interface BaseUserInfo {
     id: string;
     sid: string;
