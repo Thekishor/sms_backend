@@ -5,7 +5,7 @@ import errorHandler from "./middlewares/error.handler.js";
 import superadminRoutes from "./routes/super-admin.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
-import { connectRedis } from "./config/redis.js";
+import { connectRedis } from "./config/redis.config.js";
 import { globalRateLimiter } from "./config/rate-limiter.js"
 import cors from "cors";
 import logger from "./config/logger.js"

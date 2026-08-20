@@ -1,5 +1,7 @@
 import rateLimit from "express-rate-limit";
 import { Request, Response } from "express";
+import { RedisStore } from "rate-limit-redis";
+import {redis} from "./redis.config";
 
 const createRateLimitHandler = (message: string) => {
 
@@ -24,6 +26,11 @@ export const globalRateLimiter = rateLimit({
     max: 100,
     standardHeaders: true,
     legacyHeaders: false,
+
+    store: new RedisStore({
+        sendCommand: (...args: string[]) => redis.sendCommand(args),
+    }),
+    
     handler: createRateLimitHandler("Too many requests. Please try again later."),
 });
 
@@ -33,6 +40,12 @@ export const loginRateLimiter = rateLimit({
     max: 5,
     standardHeaders: true,
     legacyHeaders: false,
+
+    //redis store configuration
+    store: new RedisStore({
+        sendCommand: (...args: string[]) => redis.sendCommand(args),
+    }),
+
     handler: createRateLimitHandler("Too many login attempts. Please try again later."),
 });
 
@@ -42,5 +55,10 @@ export const registerRateLimiter = rateLimit({
     max: 15,
     standardHeaders: true,
     legacyHeaders: false,
+
+    store: new RedisStore({
+        sendCommand: (...args: string[]) => redis.sendCommand(args),
+    }),
+
     handler: createRateLimitHandler("Too many registration attempts. Please try again later."),
 });

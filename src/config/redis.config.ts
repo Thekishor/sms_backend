@@ -4,6 +4,7 @@ import { env } from "./env.js";
 
 export const redis = createClient({
     url: env.REDIS_URL,
+    // If Redis is disconnected, commands aren't queued in Node.js waiting for Redis to come back.
     disableOfflineQueue: true,
     socket: {
         connectTimeout: 10000,

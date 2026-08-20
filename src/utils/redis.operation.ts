@@ -1,5 +1,5 @@
 import { logError } from "../config/logger.js";
-import { redis } from "../config/redis.js";
+import { redis } from "../config/redis.config.js";
 
 export const redisOperation = {
 
