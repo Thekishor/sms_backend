@@ -1,6 +1,6 @@
 # School & Inventory Management System (SMS) Backend
 
-A production-grade, multi-tenant SaaS School and Inventory Management System (SMS/EMS) backend built with Node.js, Express, TypeScript, Prisma ORM, Neon PostgreSQL, Redis, and WebSockets.
+A production-grade, multi-tenant SaaS School and Inventory Management System (SMS/EMS) backend built with Node.js, Express, TypeScript, Prisma ORM, Neon PostgreSQL, Redis Cloud, and WebSockets.
 
 ---
 
@@ -86,7 +86,7 @@ sms_backend/
 ├── src/
 │   ├── app.ts                  # Express Application configuration and middlewares
 │   ├── server.ts               # HTTP and WebSockets Server entry point
-│   ├── config/                 # Redis, Prisma, Env, and Logger configurations
+│   ├── config/                 # Redis Cloud, Prisma, Env, and Logger configurations
 │   ├── controller/             # Request handlers (auth, admin, students, inventory, etc.)
 │   ├── docs/                   # Swagger OpenAPI configuration & Zod-to-OpenAPI registry
 │   ├── dto/                    # Data Transfer Objects
@@ -124,7 +124,7 @@ Make sure you have the following installed on your machine:
 
 - Node.js (v18 or higher recommended)
 - PostgreSQL Database
-- Redis Server
+- Redis Cloud Server
 
 ### Installation Steps
 
