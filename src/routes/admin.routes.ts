@@ -25,7 +25,7 @@ import {
     cancelTrialSubscription,
     getActiveCompanySubscriptionByAdmin,
 } from "../controller/subscription.controller.js";
-import { registerRateLimiter } from "../config/rate-limiter.js";
+import { createRateLimiters } from "../config/rate-limiter.js";
 import { requireSubscription } from "../middlewares/subscription.middleware.js";
 import { validateParams, validateRequest } from "../middlewares/validate.middleware.js";
 import {
@@ -42,151 +42,153 @@ import {
     updateStaffSchema
 } from "../schemas/request/request.dto.js";
 
-const router = Router();
+export function adminRoutes(rateLimiters: ReturnType<typeof createRateLimiters>) {
+    const router = Router();
 
-/* auth admin routes */
+    /* auth admin routes */
 
-// register admin
-router.post(
-    "/auth/register",
-    registerRateLimiter,
-    validateRequest(createAdminSchema),
-    registerAdmin
-);
+    // register admin
+    router.post(
+        "/auth/register",
+        rateLimiters.registerRateLimiter,
+        validateRequest(createAdminSchema),
+        registerAdmin
+    );
 
-// verify admin by otp and email field 
-router.post(
-    "/auth/verify-email",
-    validateRequest(otpVerificationSchema),
-    verifyAccountByAdmin
-);
+    // verify admin by otp and email field 
+    router.post(
+        "/auth/verify-email",
+        validateRequest(otpVerificationSchema),
+        verifyAccountByAdmin
+    );
 
-// resend otp for admin if opt expiry
-router.post(
-    "/auth/resend-otp",
-    validateRequest(resendOtpSchema),
-    resendOtpForAdmin
-);
+    // resend otp for admin if opt expiry
+    router.post(
+        "/auth/resend-otp",
+        validateRequest(resendOtpSchema),
+        resendOtpForAdmin
+    );
 
-// forgot password request
-router.post("/auth/forgot-password", forgotPasswordAdmin);
+    // forgot password request
+    router.post("/auth/forgot-password", forgotPasswordAdmin);
 
-// reset password
-router.post(
-    "/auth/reset-password",
-    validateRequest(resetPasswordSchema),
-    resetPasswordForAdmin
-);
+    // reset password
+    router.post(
+        "/auth/reset-password",
+        validateRequest(resetPasswordSchema),
+        resetPasswordForAdmin
+    );
 
-// change password
-router.post(
-    "/change-password",
-    verifyToken,
-    validateRequest(changePasswordSchema),
-    changedPasswordForAdmin
-);
+    // change password
+    router.post(
+        "/change-password",
+        verifyToken,
+        validateRequest(changePasswordSchema),
+        changedPasswordForAdmin
+    );
 
-// update admin by id
-router.patch(
-    "/:id",
-    verifyToken,
-    validateParams(paramsSchema),
-    validateRequest(updateAdminSchema),
-    updateAdmin
-);
+    // update admin by id
+    router.patch(
+        "/:id",
+        verifyToken,
+        validateParams(paramsSchema),
+        validateRequest(updateAdminSchema),
+        updateAdmin
+    );
 
-/* company */
-router.post("/companies", verifyToken, validateRequest(companySchema), createCompany);
-router.get("/companies", verifyToken, getAllCompaniesByAdmin);
-router.get("/companies/:id", verifyToken, getCompany);
+    /* company */
+    router.post("/companies", verifyToken, validateRequest(companySchema), createCompany);
+    router.get("/companies", verifyToken, getAllCompaniesByAdmin);
+    router.get("/companies/:id", verifyToken, getCompany);
 
-// update company
-router.patch(
-    "/companies/:id",
-    verifyToken,
-    validateParams(paramsSchema),
-    validateRequest(companySchema),
-    updateCompany
-);
+    // update company
+    router.patch(
+        "/companies/:id",
+        verifyToken,
+        validateParams(paramsSchema),
+        validateRequest(companySchema),
+        updateCompany
+    );
 
-// delete company
-router.delete("/companies/:id", verifyToken, validateParams(paramsSchema), deleteCompany);
+    // delete company
+    router.delete("/companies/:id", verifyToken, validateParams(paramsSchema), deleteCompany);
 
-/* company subscriptions (admin) */
-router.get("/companies/:id/subscription", verifyToken, getActiveCompanySubscriptionByAdmin);
-router.patch("/companies/:id/subscription/cancel-trial", verifyToken, cancelTrialSubscription);
+    /* company subscriptions (admin) */
+    router.get("/companies/:id/subscription", verifyToken, getActiveCompanySubscriptionByAdmin);
+    router.patch("/companies/:id/subscription/cancel-trial", verifyToken, cancelTrialSubscription);
 
-/* staff */
+    /* staff */
 
-// create staff for company
-router.post(
-    "/staff",
-    verifyToken,
-    requireCompany,
-    requireSubscription,
-    validateRequest(staffSchema),
-    createStaff
-);
+    // create staff for company
+    router.post(
+        "/staff",
+        verifyToken,
+        requireCompany,
+        requireSubscription,
+        validateRequest(staffSchema),
+        createStaff
+    );
 
-// get all staff
-router.get(
-    "/staff",
-    verifyToken,
-    requireCompany,
-    requireSubscription,
-    getAllStaff
-);
+    // get all staff
+    router.get(
+        "/staff",
+        verifyToken,
+        requireCompany,
+        requireSubscription,
+        getAllStaff
+    );
 
-// get staff by id
-router.get(
-    "/staff/:id",
-    verifyToken,
-    requireCompany,
-    requireSubscription,
-    validateParams(paramsSchema),
-    getStaff
-);
+    // get staff by id
+    router.get(
+        "/staff/:id",
+        verifyToken,
+        requireCompany,
+        requireSubscription,
+        validateParams(paramsSchema),
+        getStaff
+    );
 
-// change password for staff by admin
-router.patch(
-    "/staff/:id/change-password",
-    verifyToken,
-    requireCompany,
-    requireSubscription,
-    validateParams(paramsSchema),
-    validateRequest(changeStaffPasswordSchema),
-    changePasswordForStaff
-);
+    // change password for staff by admin
+    router.patch(
+        "/staff/:id/change-password",
+        verifyToken,
+        requireCompany,
+        requireSubscription,
+        validateParams(paramsSchema),
+        validateRequest(changeStaffPasswordSchema),
+        changePasswordForStaff
+    );
 
-// change staff status
-router.patch(
-    "/staff/:id/status",
-    verifyToken,
-    requireCompany,
-    requireSubscription,
-    validateParams(paramsSchema),
-    changedStaffStatus
-);
+    // change staff status
+    router.patch(
+        "/staff/:id/status",
+        verifyToken,
+        requireCompany,
+        requireSubscription,
+        validateParams(paramsSchema),
+        changedStaffStatus
+    );
 
-// update staff information
-router.patch(
-    "/staff/:id",
-    verifyToken,
-    requireCompany,
-    requireSubscription,
-    validateParams(paramsSchema),
-    validateRequest(updateStaffSchema),
-    updateStaff
-);
+    // update staff information
+    router.patch(
+        "/staff/:id",
+        verifyToken,
+        requireCompany,
+        requireSubscription,
+        validateParams(paramsSchema),
+        validateRequest(updateStaffSchema),
+        updateStaff
+    );
 
-// delete staff by admin
-router.delete(
-    "/staff/:id",
-    verifyToken,
-    requireCompany,
-    requireSubscription,
-    validateParams(paramsSchema),
-    deleteStaff
-);
+    // delete staff by admin
+    router.delete(
+        "/staff/:id",
+        verifyToken,
+        requireCompany,
+        requireSubscription,
+        validateParams(paramsSchema),
+        deleteStaff
+    );
 
-export default router;
+    return router;
+}

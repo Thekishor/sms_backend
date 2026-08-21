@@ -3,19 +3,19 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import errorHandler from "./middlewares/error.handler.js";
 import superadminRoutes from "./routes/super-admin.routes.js";
-import adminRoutes from "./routes/admin.routes.js";
-import authRoutes from "./routes/auth.routes.js";
-import { globalRateLimiter } from "./config/rate-limiter.js";
+import {adminRoutes} from "./routes/admin.routes.js";
+import {authRoutes} from "./routes/auth.routes.js";
+import { createRateLimiters } from "./config/rate-limiter.js";
 import cors from "cors";
 import logger from "./config/logger.js";
 import { openApiDocument } from "./docs/openapi.js";
 import swaggerUi from "swagger-ui-express";
-import companyRoutes from "./routes/company.routes.js";
+import {companyRoutes} from "./routes/company.routes.js";
 import "./jobs/scheduler.js";
 import compression from "compression";
 import AppError from "./utils/AppError.js";
 
-export const createApp = () => {
+export const createApp = (rateLimiters: ReturnType<typeof createRateLimiters>) => {
   const app = express();
 
   //cors config
@@ -83,16 +83,17 @@ export const createApp = () => {
     next();
   });
 
-  // auth routes
-  app.use("/api/v1/auth", authRoutes);
+  // Global rate limiting first
+  // Protects every single route under /api/v1
+    app.use("/api/v1", rateLimiters.globalRateLimiter);
 
-  // global rate limiting
-  app.use("/api/v1", globalRateLimiter);
+  // auth routes
+  app.use("/api/v1/auth", authRoutes(rateLimiters));
 
   // api routes
   app.use("/api/v1/super-admin", superadminRoutes);
-  app.use("/api/v1/admins", adminRoutes);
-  app.use("/api/v1/companies", companyRoutes);
+  app.use("/api/v1/admins", adminRoutes(rateLimiters));
+  app.use("/api/v1/companies", companyRoutes(rateLimiters));
 
   //swagger docs
   app.use("/sms/docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));

@@ -18,14 +18,15 @@ import { createServer } from "node:http";
 import { initializeSocket } from "./socket/socket.js";
 import { SocketHandler } from "./socket/socketHandler.js";
 import { createApp } from "./app.js";
-
+import { createRateLimiters } from "./config/rate-limiter.js";
 
 // Connect Dbs before starting
 await connectDB();
 await connectRedis();
 
 // Create Server & Sockets
-const app = createApp();
+const rateLimiters = createRateLimiters();
+const app = createApp(rateLimiters);
 const httpServer = createServer(app);
 const io = initializeSocket(httpServer);
 SocketHandler.register(io);

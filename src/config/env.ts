@@ -16,6 +16,7 @@ const envSchema = z.object({
     ACCESS_TOKEN_EXPIRY: z.string(),
     REFRESH_TOKEN_EXPIRY: z.string(),
     REDIS_URL: z.string(),
+    DOMAIN: z.string(),
 })
 
 export const env = envSchema.parse(process.env);
