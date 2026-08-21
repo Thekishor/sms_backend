@@ -34,8 +34,22 @@ redis.on("end", () => {
     logger.warn("Redis connection ended...");
 });
 
-export const connectRedis = () => {
-    redis.connect().catch((err) => {
-        logError("Redis failed to connect...", err);
-    })
+export const connectRedis = async () => {
+    try {
+        await redis.connect();
+        logger.info("Redis connected successfully");
+    } catch (error) {
+        logError("Redis failed to connect...", error);
+    }
+}
+
+export const disconnectRedis = async () => {
+    try {
+        // graceful shutdown
+        await redis.quit();
+        logger.info("Redis disconnected gracefully");
+    } catch (error) {
+        logError("Graceful Redis exit failed, forcing socket destruction...", error);
+        redis.destroy();
+    }
 }
