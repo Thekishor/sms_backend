@@ -37,9 +37,11 @@ export const OTP_TEMPLATE = (
       ${message}
     </p>
 
-    <p style="margin:0 0 24px;font-size:36px;font-weight:700;letter-spacing:8px;color:#111827;font-family:monospace;">
-      ${otp}
-    </p>
+    <div style="margin:0 0 24px;padding:16px;background:#F8FAFC;border:1px solid #E5E7EB;border-radius:10px;text-align:center;">
+      <p style="margin:0;font-size:34px;font-weight:700;letter-spacing:6px;color:#111827;font-family:monospace;">
+        ${otp}
+      </p>
+    </div>
 
     <p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#4B5563;">
       This OTP will expire in <strong>${expiry}</strong>.

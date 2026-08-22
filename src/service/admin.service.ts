@@ -21,6 +21,7 @@ import { redisOperation } from "../utils/redis.operation.js";
 import { mapCompany } from "./company.service.js";
 import { createNotificationForAdmin, createNotificationForSuperAdmin } from "./notification.service.js";
 import { sendEmailToAdmin } from "./email.service.js";
+import { acquiredLock, releaseLock } from "../utils/redis.lock.js";
 
 export const register =
     async (data: CreateAdminDto):
@@ -437,59 +438,83 @@ export const getAdmins =
     }> => {
 
         const key = `superadmin:${superAdminId}:admins:${skip}:${take}:${search}:${JSON.stringify(orderBy)}`;
+        const lockKey = `lock:${key}`;
+        let lockToken: string | null = null;
 
-        // get from redis
-        const cached = await redisOperation.get(key);
+        for (let i = 0; i < 5; i++) {
+            // get from redis
+            const cached = await redisOperation.get(key);
 
-        if (cached) {
-            return JSON.parse(cached);
+            if (cached) {
+                return JSON.parse(cached);
+            }
+
+            lockToken = await acquiredLock(lockKey, 5000);
+
+            if (lockToken) {
+                break;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-        const where: Prisma.AdminWhereInput = {
-            role: Role.ADMIN,
-            ...(search && {
-                OR: [
-                    { fullName: { contains: search, mode: "insensitive" } },
-                    { email: { contains: search, mode: "insensitive" } },
-                ]
-            })
+        if (!lockToken) {
+            throw new AppError(
+                "Unable to process your request right now. Please try again shortly.",
+                503,
+                "SERVICE_UNAVAILABLE"
+            );
         }
 
-        const [admins, total] = await Promise.all([
-            prisma.admin.findMany({
-                where,
-                orderBy,
-                skip,
-                take,
-                select: {
-                    id: true,
-                    fullName: true,
-                    email: true,
-                    phone: true,
-                    address: true,
-                    role: true,
-                    status: true,
-                    createdAt: true,
-                    updatedAt: true
-                }
-            }),
-            prisma.admin.count({ where })
-        ])
+        try {
+            const where: Prisma.AdminWhereInput = {
+                role: Role.ADMIN,
+                ...(search && {
+                    OR: [
+                        { fullName: { contains: search, mode: "insensitive" } },
+                        { email: { contains: search, mode: "insensitive" } },
+                    ]
+                })
+            };
 
-        if (admins.length === 0) {
-            return { admins: [], total: 0 }
+            const [admins, total] = await Promise.all([
+                prisma.admin.findMany({
+                    where,
+                    orderBy,
+                    skip,
+                    take,
+                    select: {
+                        id: true,
+                        fullName: true,
+                        email: true,
+                        phone: true,
+                        address: true,
+                        role: true,
+                        status: true,
+                        createdAt: true,
+                        updatedAt: true
+                    }
+                }),
+                prisma.admin.count({ where })
+            ])
+
+            if (admins.length === 0) {
+                return { admins: [], total: 0 }
+            }
+
+            // set into redis
+            await redisOperation.setEx(
+                key,
+                600,
+                JSON.stringify({ admins, total })
+            );
+
+            return { admins, total };
+
+        } finally {
+            await releaseLock(lockKey, lockToken);
         }
-
-        // set into redis
-        await redisOperation.setEx(
-            key,
-            600,
-            JSON.stringify({ admins, total })
-        );
-
-        return { admins, total };
-
-    }
+}
 
 export const getAllCompaniesWithAdminService =
     async (adminId: string):
