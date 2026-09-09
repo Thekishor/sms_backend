@@ -14,20 +14,8 @@ export const redis = createClient({
     }
 });
 
-redis.on("connect", () => {
-    logger.info("Redis connected...");
-})
-
 redis.on("error", (err) => {
     logError("Redis error...", err);
-});
-
-redis.on("ready", () => {
-    logger.info("Redis is ready...");
-});
-
-redis.on("reconnecting", () => {
-    logger.warn("Redis reconnecting...");
 });
 
 redis.on("end", () => {
