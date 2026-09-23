@@ -1,6 +1,7 @@
 import { createClient } from "redis";
 import logger, { logError } from "./logger.js";
 import { env } from "./env.js";
+import Redis from "ioredis";
 
 export const redis = createClient({
     url: env.REDIS_URL,
@@ -13,6 +14,11 @@ export const redis = createClient({
         }
     }
 });
+
+// io redis config for BullMQ
+export const bullmqRedis = new Redis(env.REDIS_URL, {
+    maxRetriesPerRequest: null,
+})
 
 redis.on("error", (err) => {
     logError("Redis error...", err);

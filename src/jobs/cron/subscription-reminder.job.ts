@@ -2,8 +2,7 @@ import cron from 'node-cron';
 import { prisma } from '../../config/prisma.js';
 import logger, { logError } from '../../config/logger.js';
 import { SubscriptionStatus } from '@prisma/client';
-import { EMAIL_TEMPLATES, SUBSCRIPTION_REMINDER_TEMPLATE } from '../../utils/templates.js';
-import { sendEmail } from '../../config/mail.config.js';
+import { sendEmailToCompany } from '../../service/email.service.js';
 
 // Runs every day at 1:20 PM corn jobs
 cron.schedule('20 13 * * *', async () => {
@@ -73,15 +72,3 @@ cron.schedule('20 13 * * *', async () => {
 }, {
     timezone: 'Asia/Kathmandu'
 });
-
-export async function sendEmailToCompany(
-    email: string,
-    companyName: string,
-    subscriptionType: string,
-    expiryDate: string,
-    daysRemaining: number
-) {
-    const { title, subject, message } = EMAIL_TEMPLATES.SUBSCRIPTION_REMINDER;
-    const html = SUBSCRIPTION_REMINDER_TEMPLATE(title, companyName, subscriptionType, message, expiryDate, daysRemaining);
-    await sendEmail(email, subject, html);
-}

@@ -14,6 +14,7 @@ import { companyRoutes } from "./routes/company.routes.js";
 import "./jobs/scheduler.js";
 import compression from "compression";
 import AppError from "./utils/AppError.js";
+import "./queues/email.worker.js";
 
 export const createApp = (rateLimiters: ReturnType<typeof createRateLimiters>) => {
   const app = express();

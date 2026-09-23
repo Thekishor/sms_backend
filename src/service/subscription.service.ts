@@ -5,7 +5,7 @@ import { prisma } from "../config/database.js";
 import AppError from "../utils/AppError.js";
 import { SubscriptionResponseDto, SubscriptionsResponseDto } from "../schemas/response/response.dto.js";
 import { redisOperation } from "../utils/redis.operation.js";
-import { sendEmailToCompany } from "../jobs/cron/subscription-reminder.job.js";
+import { sendEmailToCompany } from "../service/email.service.js";
 
 export const getCompanySubscriptionsService =
     async (

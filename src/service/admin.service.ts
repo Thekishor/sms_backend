@@ -126,11 +126,11 @@ export const register =
             otp = await generateOtpAndStoreInRedis(email, OtpType.EMAIL_VERIFICATION);
         } catch {
             await prisma.admin.delete({
-                 where: { 
+                where: {
                     id: registerAdmin.id
-                 } 
-                });
-                
+                }
+            });
+
             throw new AppError(
                 "Registration service is temporarily unavailable. Please try again shortly.",
                 503,
@@ -141,6 +141,7 @@ export const register =
         const { subject, title, message, expiry } = EMAIL_TEMPLATES.EMAIL_VERIFICATION;
 
         await sendEmailToAdmin(subject, title, message, expiry, email, otp);
+
         return {
             admin: mapAdmin(registerAdmin)
         };
@@ -514,7 +515,7 @@ export const getAdmins =
         } finally {
             await releaseLock(lockKey, lockToken);
         }
-}
+    }
 
 export const getAllCompaniesWithAdminService =
     async (adminId: string):
