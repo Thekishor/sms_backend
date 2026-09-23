@@ -79,6 +79,14 @@ export async function sendEmailToAdmin(
             );
         }
     }
+
+    else {
+        throw new AppError(
+            "Invalid email title provided. Please provide a valid title.",
+            400,
+            "INVALID_EMAIL_TITLE"
+        );
+    }
 }
 
 export async function sendEmailToCompany(

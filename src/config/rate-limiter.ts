@@ -22,8 +22,8 @@ export function createRateLimiters() {
     return {
         globalRateLimiter: rateLimit({
             windowMs: 60 * 1000,
-            max: 100,
-            validate: {singleCount: false},
+            max: 1000,
+            validate: { singleCount: false },
             standardHeaders: true,
             legacyHeaders: false,
             store: new RedisStore({
@@ -34,8 +34,8 @@ export function createRateLimiters() {
         }),
         loginRateLimiter: rateLimit({
             windowMs: 15 * 60 * 1000,
-            max: 5,
-            validate: {singleCount: false},
+            max: 20,
+            validate: { singleCount: false },
             standardHeaders: true,
             legacyHeaders: false,
             store: new RedisStore({
@@ -47,9 +47,9 @@ export function createRateLimiters() {
             ),
         }),
         registerRateLimiter: rateLimit({
-            windowMs: 60 * 60 * 1000,
-            max: 15,
-            validate: {singleCount: false},
+            windowMs: 15 * 60 * 1000,
+            max: 5,
+            validate: { singleCount: false },
             standardHeaders: true,
             legacyHeaders: false,
             store: new RedisStore({

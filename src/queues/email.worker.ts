@@ -14,7 +14,7 @@ const worker = new Worker(
 
             await sendEmail(email, subject, emailVerificationTemplate);
 
-            logger.info(`Verification email sent to ${email}`);
+            logger.info(`Verification mail sent to ${email}`);
         }
 
         // for reset password verification otp mail
@@ -24,7 +24,7 @@ const worker = new Worker(
 
             await sendEmail(email, subject, passwordResetTemplate);
 
-            logger.info(`Password reset email sent to ${email}`);
+            logger.info(`Password reset mail sent to ${email}`);
         }
 
         // for subscription expiry mail
@@ -34,7 +34,7 @@ const worker = new Worker(
 
             await sendEmail(email, subject, subscriptionExpiryTemplate);
 
-            logger.info(`Subscription reminder email sent to ${email}`);
+            logger.info(`Subscription expiry mail sent to ${email}`);
         }
     },
     {
