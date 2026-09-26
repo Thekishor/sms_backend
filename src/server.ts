@@ -1,15 +1,4 @@
-// Static imports at top
-import dotenv from "dotenv";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-// Load dotenv
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config({ 
-    path: path.resolve(__dirname, "../.env.local"),
-});
+import { env } from "./config/env.js";
 
 import { connectRedis, disconnectRedis } from "./config/redis.config.js";
 import { connectDB, disconnectDB } from "./config/database.js";
@@ -31,14 +20,14 @@ const httpServer = createServer(app);
 const io = initializeSocket(httpServer);
 SocketHandler.register(io);
 
-const PORT = process.env.PORT || 3000;
+const PORT = env.PORT || 3000;
 
 const server = httpServer.listen(PORT, () => {
     logger.info("Server started on port", { port: PORT });
 });
 
 // shutdown helper
-async function shutdown(code:number) {
+async function shutdown(code: number) {
     logger.info("Closing connections...");
     server.close();
     await disconnectDB();

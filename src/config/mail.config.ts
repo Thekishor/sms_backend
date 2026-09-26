@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 import logger, { logError } from './logger.js';
 import { env } from './env.js';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(env.RESEND_API_KEY);
 
 export async function sendEmail(to: string, subject: string, html: string) {
     try {
@@ -18,8 +18,8 @@ export async function sendEmail(to: string, subject: string, html: string) {
             return { success: false };
         }
 
-        logger.info("Email sent successfully", {data});
-        return { success: true};
+        logger.info("Email sent successfully", { data });
+        return { success: true };
 
     } catch (error) {
         logError("Failed to send email", error);

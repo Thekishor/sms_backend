@@ -1,22 +1,15 @@
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
-import dotenv from "dotenv";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import logger, { logError } from "./logger.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config({ path: path.resolve(__dirname, "../../.env.local") });
+import { env } from "./env.js";
 
 const adapter = new PrismaNeon({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: env.DATABASE_URL,
 });
 
 export const prisma = new PrismaClient({
     adapter,
-    log: process.env.NODE_ENV === "development"
+    log: env.NODE_ENV === "development"
         ? [
             { emit: "event", level: "query" },
             { emit: "event", level: "warn" },
@@ -28,7 +21,7 @@ export const prisma = new PrismaClient({
 });
 
 // $on only works with emit: "event"
-if (process.env.NODE_ENV === "development") {
+if (env.NODE_ENV === "development") {
 
     prisma.$on("query", (e) => {
         logger.debug("Prisma Query", {
@@ -39,10 +32,13 @@ if (process.env.NODE_ENV === "development") {
 
 
     prisma.$on("warn", (e) => {
-        logger.warn("Prisma query", { message: e.message });
+        logger.warn("Prisma warning", { message: e.message });
     });
 }
 
 prisma.$on("error", (e) => {
-    logError("Prisma error", { message: e.message });
+    logError("Prisma error", {
+        message: e.message,
+        target: e.target,
+    });
 });
