@@ -7,7 +7,7 @@ import { logError } from '../config/logger.js';
 type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
 
 const permissionMiddleware = (permissions: Permission[]) => {
-    return (req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, _: Response, next: NextFunction) => {
 
         try {
             if (req.admin) {

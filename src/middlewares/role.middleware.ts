@@ -4,7 +4,7 @@ import { UserType } from "@prisma/client";
 import { logError } from "../config/logger.js";
 
 const roleMiddleware = (roles: string[]) => {
-    return (req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, _: Response, next: NextFunction) => {
 
         try {
             if (req.admin) {

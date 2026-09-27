@@ -5,7 +5,7 @@ import { prisma } from '../config/database.js';
 import { Status } from '@prisma/client';
 
 export const requireCompany =
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (req: Request, _: Response, next: NextFunction) => {
         try {
             // staff
             if (req.staff) {

@@ -15,11 +15,11 @@ export const verifySuperAdminToken =
             const authHeader = req.headers.authorization;
 
             if (!authHeader?.startsWith("Bearer ")) {
-                return next(new AppError(
+                throw new AppError(
                     "Authentication token is missing",
                     401,
                     "UNAUTHORIZED"
-                ));
+                );
             }
 
             const token = authHeader.split(" ")[1];

@@ -95,7 +95,7 @@ const permissionsField = z.array(PermissionSchema)
 const addressField = z
     .string()
     .trim()
-    .min(5, "Address is required")
+    .min(1, "Address is required")
     .openapi({
         example: "Tilottama-4, Rupandehi"
     });
