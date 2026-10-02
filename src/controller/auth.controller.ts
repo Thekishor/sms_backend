@@ -25,18 +25,7 @@ export const loginUser =
     async (req: Request, res: Response, next: NextFunction) => {
 
         try {
-            const ipAddress = req.ip;
-            const userAgent = req.get("User-Agent");
-
-            // get ip address and user agent
-            if (!ipAddress) {
-                throw new AppError("Ip address is missing", 400, "IP_ADDRESS_REQUIRED");
-            }
-
-            if (!userAgent) {
-                throw new AppError("User Agent is missing", 400, "USER_AGENT_REQUIRED");
-            }
-
+            const { ipAddress, userAgent } = getRequestMetadata(req);
             const { loginIdentifier, password } = req.body;
             const authUser = await findUserForLogin(loginIdentifier);
 
@@ -92,7 +81,7 @@ export const loginUser =
 
             } else if (userType === UserType.ADMIN) {
 
-                const { accessToken, refreshToken } = await createUserSession({
+                const { accessToken, refreshToken } = await createUserLoginSession({
                     user,
                     userType,
                     ipAddress,
@@ -117,7 +106,7 @@ export const loginUser =
 
             } else if (userType === UserType.STAFF) {
 
-                const { accessToken, refreshToken } = await createUserSession({
+                const { accessToken, refreshToken } = await createUserLoginSession({
                     user,
                     userType,
                     ipAddress,
@@ -184,17 +173,133 @@ export const refreshToken =
                 throw new AppError("Invalid token payload", 401, "INVALID_TOKEN");
             }
 
-            await findUserSessionAndVerify(
-                sid,
-                oldRefreshToken,
-                sub,
-                type,
-                version,
-                res
-            );
+            const session = await prisma.session.findFirst({
+                where: {
+                    id: sid, userId: sub, revoked: false
+                }
+            });
+
+            if (!session?.hashRefreshToken) {
+                throw new AppError(
+                    "Your session is invalid. Please log in again.",
+                    401,
+                    "INVALID_SESSION"
+                );
+            }
+
+            if (session.expiresAt < new Date()) {
+                throw new AppError(
+                    "Your session has expired. Please log in again.",
+                    401,
+                    "SESSION_EXPIRED"
+                );
+            }
+
+            const isTokenValid = equalHashToken(oldRefreshToken, session.hashRefreshToken);
+
+            if (!isTokenValid) {
+                throw new AppError(
+                    "Refresh token is invalid",
+                    401,
+                    "INVALID_TOKEN"
+                );
+            }
+
+            if (type === UserType.ADMIN) {
+
+                const user = await prisma.admin.findUnique({
+                    where: {
+                        id: sub
+                    }
+                });
+
+                if (user?.tokenVersion !== version) {
+                    throw new AppError("Invalid or expired token", 401, "UNAUTHORIZED");
+                }
+
+                if (user.status !== Status.ACTIVE) {
+                    throw new AppError(
+                        STATUS_ERROR[user.status],
+                        403,
+                        "ACCOUNT_NOT_ACTIVE"
+                    );
+                }
+
+                const { accessToken, refreshToken } = await createUserRefreshSession({
+                    user,
+                    userType: UserType.ADMIN,
+                    sid,
+                    accessPayload: {
+                        role: user.role,
+                    },
+                });
+
+                res.cookie("refreshToken", refreshToken, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'strict',
+                    maxAge: 7 * 24 * 60 * 60 * 1000,
+                });
+
+                return res.status(200).json({
+                    message: "Token refreshed successfully",
+                    admin: mapAdmin(user),
+                    token: accessToken,
+                });
+            }
+
+            else if (type === UserType.STAFF) {
+
+                const user = await prisma.staff.findUnique({
+                    where: { id: sub }
+                });
+
+                if (user?.tokenVersion !== version) {
+                    throw new AppError("Invalid or expired token", 401, "UNAUTHORIZED");
+                }
+
+                if (user?.status !== Status.ACTIVE) {
+                    throw new AppError(
+                        STATUS_ERROR[user.status],
+                        403,
+                        "ACCOUNT_NOT_ACTIVE"
+                    );
+                }
+
+                const { accessToken, refreshToken } = await createUserRefreshSession({
+                    user,
+                    userType: UserType.ADMIN,
+                    sid,
+                    accessPayload: {
+                        roles: user.roles,
+                        cid: user.companyId,
+                        permissions: user.permissions,
+                    },
+                });
+
+                res.cookie("refreshToken", refreshToken, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'strict',
+                    maxAge: 7 * 24 * 60 * 60 * 1000,
+                });
+
+                return res.status(200).json({
+                    message: "Token refreshed successfully",
+                    staff: mapStaff(user),
+                    token: accessToken,
+                });
+            }
+            else {
+                throw new AppError(
+                    "Invalid or expired token",
+                    401,
+                    "UNAUTHORIZED"
+                );
+            }
 
         } catch (err) {
-            logError("Failed to generate token", err);
+            logError("Failed to refresh token", err);
             return next(err);
         }
     }
@@ -303,53 +408,48 @@ export const logoutAllDevices =
         }
     }
 
-export const getUser = (req: Request, res: Response, next: NextFunction) => {
-    try {
+export const getUser = (req: Request, res: Response, _: NextFunction) => {
 
-        if (req.admin) {
-            return res.status(200).send({
-                message: "Admin retrieved successfully",
-                admin: {
-                    id: req.admin.id,
-                    fullName: req.admin.fullName,
-                    email: req.admin.email,
-                    phone: req.admin.phone,
-                    address: req.admin.address,
-                    role: req.admin.role,
-                    status: req.admin.status,
-                    createdAt: req.admin.createdAt,
-                    updatedAt: req.admin.updatedAt,
-                }
-            });
+    if (req.admin) {
+        return res.status(200).send({
+            message: "Admin retrieved successfully",
+            admin: {
+                id: req.admin.id,
+                fullName: req.admin.fullName,
+                email: req.admin.email,
+                phone: req.admin.phone,
+                address: req.admin.address,
+                role: req.admin.role,
+                status: req.admin.status,
+                createdAt: req.admin.createdAt,
+                updatedAt: req.admin.updatedAt,
+            }
+        });
 
-        } else if (req.staff) {
-            return res.status(200).json({
-                message: "Staff retrieved successfully",
-                staff: {
-                    id: req.staff.id,
-                    fullName: req.staff.fullName,
-                    email: req.staff.email,
-                    phone: req.staff.phone,
-                    address: req.staff.address,
-                    roles: req.staff.roles,
-                    status: req.staff.status,
-                    createdAt: req.staff.createdAt,
-                    updatedAt: req.staff.updatedAt,
-                    createdBy: req.staff.createdBy,
-                    companyId: req.staff.companyId,
-                }
-            });
+    } else if (req.staff) {
+        return res.status(200).json({
+            message: "Staff retrieved successfully",
+            staff: {
+                id: req.staff.id,
+                fullName: req.staff.fullName,
+                email: req.staff.email,
+                phone: req.staff.phone,
+                address: req.staff.address,
+                roles: req.staff.roles,
+                status: req.staff.status,
+                createdAt: req.staff.createdAt,
+                updatedAt: req.staff.updatedAt,
+                createdBy: req.staff.createdBy,
+                companyId: req.staff.companyId,
+            }
+        });
 
-        } else {
-            throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
-        }
-    } catch (err) {
-        logError("Failed to get user information", err);
-        return next(err);
+    } else {
+        throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
     }
 }
 
-const createUserSession = async ({
+const createUserLoginSession = async ({
     user,
     userType,
     ipAddress,
@@ -402,6 +502,55 @@ const createUserSession = async ({
             expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
             ...sessionData,
         },
+    });
+
+    return { accessToken, refreshToken };
+}
+
+const createUserRefreshSession = async ({
+    user,
+    userType,
+    sid,
+    accessPayload,
+}: {
+    user: any;
+    userType: UserType;
+    sid: string,
+    accessPayload: Record<string, any>;
+}) => {
+
+    const accessToken = generateAccessToken(
+        {
+            sub: user.id,
+            type: userType,
+            sid,
+            version: user.tokenVersion,
+            jti: randomUUID(),
+            ...accessPayload,
+        },
+        env.JWT_ACCESS_SECRET,
+        env.ACCESS_TOKEN_EXPIRY
+    );
+
+    const refreshToken = generateRefreshToken(
+        {
+            sub: user.id,
+            sid,
+            type: userType,
+            version: user.tokenVersion,
+            jti: randomUUID(),
+        },
+        env.JWT_REFRESH_SECRET,
+        env.REFRESH_TOKEN_EXPIRY
+    );
+
+    await prisma.session.update({
+        where: {
+            id: sid,
+        },
+        data: {
+            hashRefreshToken: hashToken(refreshToken),
+        }
     });
 
     return { accessToken, refreshToken };
@@ -474,211 +623,6 @@ async function findUserForLogin(loginIdentifier: string) {
     return null;
 }
 
-async function findUserSessionAndVerify(
-    sessionId: string,
-    oldRefreshToken: string,
-    sub: string,
-    type: UserType,
-    version: number,
-    res: Response
-) {
-    const session = await prisma.session.findFirst({
-        where: {
-            id: sessionId, userId: sub, revoked: false
-        }
-    });
-
-    if (!session?.hashRefreshToken) {
-        throw new AppError(
-            "Your session is invalid. Please log in again.",
-            401,
-            "INVALID_SESSION"
-        );
-    }
-
-    if (session.expiresAt < new Date()) {
-        throw new AppError(
-            "Your session has expired. Please log in again.",
-            401,
-            "SESSION_EXPIRED"
-        );
-    }
-
-    const isTokenValid = equalHashToken(oldRefreshToken, session.hashRefreshToken);
-
-    if (!isTokenValid) {
-        throw new AppError(
-            "Refresh token is invalid",
-            401,
-            "INVALID_TOKEN"
-        );
-    }
-
-    if (type === UserType.ADMIN) {
-
-        const admin = await prisma.admin.findUnique({
-            where: {
-                id: sub
-            }
-        });
-
-        if (admin?.tokenVersion !== version) {
-            throw new AppError("Invalid or expired token", 401, "UNAUTHORIZED");
-        }
-
-        if (admin.status !== Status.ACTIVE) {
-            throw new AppError(
-                STATUS_ERROR[admin.status],
-                403,
-                "ACCOUNT_NOT_ACTIVE"
-            );
-        }
-
-        const adminAccessToken = generateAccessToken(
-            {
-                sub: admin.id,
-                role: admin.role,
-                type: type,
-                sid: sessionId,
-                version: admin.tokenVersion,
-                jti: randomUUID()
-            },
-            env.JWT_ACCESS_SECRET,
-            env.ACCESS_TOKEN_EXPIRY
-        );
-
-        const adminRefreshToken = generateRefreshToken(
-            {
-                sub: admin.id,
-                sid: sessionId,
-                type: type,
-                version: admin.tokenVersion,
-                jti: randomUUID()
-            },
-            env.JWT_REFRESH_SECRET,
-            env.REFRESH_TOKEN_EXPIRY
-        );
-
-        const adminHashRefreshToken = hashToken(adminRefreshToken);
-
-        await prisma.session.update({
-            where: {
-                id: sessionId
-            },
-            data: {
-                hashRefreshToken: adminHashRefreshToken,
-            }
-        })
-
-        res.cookie("refreshToken", adminRefreshToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        })
-
-        return res.status(200).json({
-            message: "Token generated successfully",
-            admin: {
-                id: admin.id,
-                fullName: admin.fullName,
-                email: admin.email,
-                phone: admin.phone,
-                address: admin.address,
-                status: admin.status,
-                role: admin.role,
-                createdAt: admin.createdAt,
-                updatedAt: admin.updatedAt
-            },
-            token: adminAccessToken,
-        });
-
-    } else if (type === UserType.STAFF) {
-
-        const staff = await prisma.staff.findUnique({
-            where: { id: sub }
-        });
-
-        if (staff?.tokenVersion !== version) {
-            throw new AppError("Invalid or expired token", 401, "UNAUTHORIZED");
-        }
-
-        if (staff?.status !== Status.ACTIVE) {
-            throw new AppError(
-                STATUS_ERROR[staff.status],
-                403,
-                "ACCOUNT_NOT_ACTIVE"
-            );
-        }
-
-        const staffAccessToken = generateAccessToken(
-            {
-                sub: staff.id,
-                role: staff.roles,
-                type: type,
-                sid: sessionId,
-                cid: staff.companyId,
-                permissions: staff.permissions,
-                version: staff.tokenVersion,
-                jti: randomUUID()
-            },
-            env.JWT_ACCESS_SECRET,
-            env.ACCESS_TOKEN_EXPIRY
-        );
-
-        const staffRefreshToken = generateRefreshToken(
-            {
-                sub: staff.id,
-                sid: sessionId,
-                type: type,
-                version: staff.tokenVersion,
-                jti: randomUUID()
-            },
-            env.JWT_REFRESH_SECRET,
-            env.REFRESH_TOKEN_EXPIRY
-        );
-
-        const staffHashRefreshToken = hashToken(staffRefreshToken);
-
-        await prisma.session.update({
-            where: { id: sessionId },
-            data: {
-                hashRefreshToken: staffHashRefreshToken,
-            }
-        })
-
-        res.cookie("refreshToken", staffRefreshToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        })
-
-        return res.status(200).json({
-            message: "Token generated successfully",
-            staff: {
-                id: staff.id,
-                fullName: staff.fullName,
-                email: staff.email,
-                phone: staff.phone,
-                address: staff.address,
-                status: staff.status,
-                role: staff.roles,
-                createdAt: staff.createdAt,
-                updatedAt: staff.updatedAt
-            },
-            token: staffAccessToken,
-        });
-
-    } else {
-        throw new AppError(
-            "Invalid or expired token",
-            401,
-            "UNAUTHORIZED"
-        );
-    }
-}
-
 async function logoutFromSystem(
     userId: string,
     sessionId: string,
@@ -714,3 +658,29 @@ async function logoutFromSystem(
 
     res.clearCookie("refreshToken");
 }
+
+export const getRequestMetadata = (req: Request) => {
+    const ipAddress = req.ip;
+    const userAgent = req.get("User-Agent");
+
+    if (!ipAddress) {
+        throw new AppError(
+            "IP address is missing",
+            400,
+            "IP_ADDRESS_REQUIRED"
+        );
+    }
+
+    if (!userAgent) {
+        throw new AppError(
+            "User-Agent is missing",
+            400,
+            "USER_AGENT_REQUIRED"
+        );
+    }
+
+    return {
+        ipAddress,
+        userAgent
+    };
+};
