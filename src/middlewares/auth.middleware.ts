@@ -54,7 +54,6 @@ export const verifySuperAdminToken =
             req.superadmin = {
                 id: superAdmin.id,
                 role: superAdmin.role,
-                sid: payload.sid,
                 fullName: superAdmin.fullName,
                 email: superAdmin.email,
                 phone: superAdmin.phone,

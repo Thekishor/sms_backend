@@ -41,11 +41,11 @@ process.on("SIGINT", () => shutdown(0));
 // Handle unhandled promise rejections (e.g database connection errors)
 process.on("unhandledRejection", (err) => {
     logError("Unhandled Rejection:", err);
-    shutdown(1);
+    void shutdown(1);
 });
 
 // Handles unexpected sync errors (like undefined variable, crash).
-process.on("uncaughtException", async (err) => {
+process.on("uncaughtException", (err) => {
     logError("Uncaught Exception:", err);
-    shutdown(1);
+    void shutdown(1);
 });

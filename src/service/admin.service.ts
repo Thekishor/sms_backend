@@ -31,10 +31,6 @@ export const register =
 
         const { fullName, email, phone, password, address } = data;
 
-        const otpAttemptsKey = `otp:attempts:admin:${email}:${OtpType.EMAIL_VERIFICATION}`;
-
-        const OTP_RESEND_MS = 120000;
-
         const existingAdmin = await prisma.admin.findFirst({
             where: {
                 OR: [
@@ -62,6 +58,11 @@ export const register =
             }
 
             logger.info("Admin already found with an account", { email });
+
+            const otpAttemptsKey = `otp:attempts:admin:${email}:${OtpType.EMAIL_VERIFICATION}`;
+
+            // 120 sec = 2 min
+            const OTP_RESEND_MS = 120000;
 
             if (existingAdmin.status === Status.UNVERIFIED) {
 
@@ -122,6 +123,7 @@ export const register =
         );
 
         let otp: string;
+
         try {
             otp = await generateOtpAndStoreInRedis(email, OtpType.EMAIL_VERIFICATION);
         } catch {
@@ -621,6 +623,7 @@ export const updateAdminService =
     async (data: UpdateAdminDto, adminId: string): Promise<{
         admin: AdminResponseDto["admin"];
     }> => {
+
         const admin = await prisma.admin.findUnique({
             where: { id: adminId }
         });

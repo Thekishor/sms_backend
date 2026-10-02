@@ -3,32 +3,32 @@ import AppError from "../utils/AppError.js"
 import { logError } from "../config/logger.js";
 import { redisOperation } from "../utils/redis.operation.js";
 import { prisma } from "../config/database.js";
+import type { SuperAdmin } from "@prisma/client";
 
-export const getMeSuperAdmin =
-    async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            if (!req.superadmin) {
-                throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
-            }
-
-            return res.status(200).json({
-                message: "Super Admin retrieved successfully",
-                superAdmin: {
-                    id: req.superadmin.id,
-                    fullName: req.superadmin.fullName,
-                    email: req.superadmin.email,
-                    phone: req.superadmin.phone,
-                    role: req.superadmin.role,
-                    createdAt: req.superadmin.createdAt,
-                    updatedAt: req.superadmin.updatedAt,
-                },
-            });
-
-        } catch (err) {
-            logError("Failed to get superadmin", err);
-            return next(err);
+export const getMeSuperAdmin = (req: Request, res: Response, next: NextFunction) => {
+    try {
+        if (!req.superadmin) {
+            throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
         }
-    };
+
+        return res.status(200).json({
+            message: "Super Admin retrieved successfully",
+            superAdmin: {
+                id: req.superadmin.id,
+                fullName: req.superadmin.fullName,
+                email: req.superadmin.email,
+                phone: req.superadmin.phone,
+                role: req.superadmin.role,
+                createdAt: req.superadmin.createdAt,
+                updatedAt: req.superadmin.updatedAt,
+            }
+        });
+
+    } catch (err) {
+        logError("Failed to get superadmin", err);
+        return next(err);
+    }
+};
 
 export const logoutSuperAdmin =
     async (req: Request, res: Response, next: NextFunction) => {
@@ -65,6 +65,18 @@ export const logoutSuperAdmin =
             return next(err);
         }
     }
+
+export function mapSuperAdmin(superAdmin: SuperAdmin) {
+    return {
+        id: superAdmin.id,
+        fullName: superAdmin.fullName,
+        email: superAdmin.email,
+        phone: superAdmin.phone,
+        role: superAdmin.role,
+        createdAt: superAdmin.createdAt,
+        updatedAt: superAdmin.updatedAt,
+    }
+};
 
 export const storeBlacklistedToken =
     async (token: string, expiry: number,) => {

@@ -9,7 +9,13 @@ interface BaseUserInfo {
     updatedAt: Date;
 }
 
-interface SuperAdminInfo extends BaseUserInfo {
+interface SuperAdminInfo {
+    id: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    createdAt: Date;
+    updatedAt: Date;
     role: string;
     expiresAt?: Date;
 }

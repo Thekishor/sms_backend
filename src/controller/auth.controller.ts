@@ -17,6 +17,9 @@ import { Role, Status, UserType } from "@prisma/client";
 import { redisOperation } from "../utils/redis.operation.js";
 import { randomUUID } from "node:crypto";
 import { TokenInfo } from "../types/express.js";
+import { mapAdmin } from "../service/admin.service.js";
+import { mapStaff } from "../service/staff.service.js";
+import { mapSuperAdmin } from "./super-admin.controller.js";
 
 export const loginUser =
     async (req: Request, res: Response, next: NextFunction) => {
@@ -47,6 +50,18 @@ export const loginUser =
 
             const { user, userType } = authUser;
 
+            if (userType !== UserType.SUPERADMIN) {
+                await checkUserPassword(password, user.password);
+
+                if (user.status !== Status.ACTIVE) {
+                    throw new AppError(
+                        STATUS_ERROR[user.status],
+                        403,
+                        "ACCOUNT_NOT_ACTIVE"
+                    );
+                }
+            }
+
             if (userType === UserType.SUPERADMIN) {
 
                 // verify password
@@ -71,75 +86,23 @@ export const loginUser =
 
                 return res.status(200).json({
                     message: "Login successfully",
-                    superAdmin: {
-                        id: user.id,
-                        fullName: user.fullName,
-                        email: user.email,
-                        phone: user.phone,
-                        role: user.role,
-                        createdAt: user.createdAt,
-                        updatedAt: user.updatedAt,
-                    },
+                    superAdmin: mapSuperAdmin(user),
                     token: superAdminAccessToken,
                 });
 
             } else if (userType === UserType.ADMIN) {
 
-                // verify password
-                await checkUserPassword(password, user.password);
-
-                //check status
-                if (user.status !== Status.ACTIVE) {
-                    throw new AppError(
-                        STATUS_ERROR[user.status],
-                        403,
-                        "ACCOUNT_NOT_ACTIVE"
-                    );
-                }
-
-                const adminTokenVersion = user.tokenVersion;
-
-                const sessionId = crypto.randomUUID();
-
-                const adminAccessToken = generateAccessToken(
-                    {
-                        sub: user.id,
+                const { accessToken, refreshToken } = await createUserSession({
+                    user,
+                    userType,
+                    ipAddress,
+                    userAgent,
+                    accessPayload: {
                         role: user.role,
-                        type: userType,
-                        sid: sessionId,
-                        version: adminTokenVersion,
-                        jti: randomUUID()
                     },
-                    env.JWT_ACCESS_SECRET,
-                    env.ACCESS_TOKEN_EXPIRY
-                );
-
-                const adminRefreshToken = generateRefreshToken(
-                    {
-                        sub: user.id,
-                        sid: sessionId,
-                        type: userType,
-                        version: adminTokenVersion,
-                        jti: randomUUID()
-                    },
-                    env.JWT_REFRESH_SECRET,
-                    env.REFRESH_TOKEN_EXPIRY
-                );
-
-                const adminHashRefreshToken = hashToken(adminRefreshToken);
-
-                await prisma.session.create({
-                    data: {
-                        id: sessionId,
-                        userId: user.id,
-                        hashRefreshToken: adminHashRefreshToken,
-                        ipAddress,
-                        userAgent,
-                        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-                    }
                 });
 
-                res.cookie("refreshToken", adminRefreshToken, {
+                res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
                     secure: true,
                     sameSite: 'strict',
@@ -148,80 +111,28 @@ export const loginUser =
 
                 return res.status(200).json({
                     message: "Login successfully",
-                    admin: {
-                        id: user.id,
-                        fullName: user.fullName,
-                        email: user.email,
-                        phone: user.phone,
-                        address: user.address,
-                        status: user.status,
-                        role: user.role,
-                        createdAt: user.createdAt,
-                        updatedAt: user.updatedAt
-                    },
-                    token: adminAccessToken,
+                    admin: mapAdmin(user),
+                    token: accessToken,
                 });
 
             } else if (userType === UserType.STAFF) {
 
-                // verify password
-                await checkUserPassword(password, user.password);
-
-                //check status
-                if (user.status !== Status.ACTIVE) {
-                    throw new AppError(
-                        STATUS_ERROR[user.status],
-                        403,
-                        "ACCOUNT_NOT_ACTIVE"
-                    );
-                }
-
-                const staffTokenVersion = user.tokenVersion;
-
-                const sessionId = crypto.randomUUID();
-
-                const staffAccessToken = generateAccessToken(
-                    {
-                        sub: user.id,
+                const { accessToken, refreshToken } = await createUserSession({
+                    user,
+                    userType,
+                    ipAddress,
+                    userAgent,
+                    accessPayload: {
                         roles: user.roles,
-                        type: userType,
-                        sid: sessionId,
                         cid: user.companyId,
                         permissions: user.permissions,
-                        version: staffTokenVersion,
-                        jti: randomUUID()
                     },
-                    env.JWT_ACCESS_SECRET,
-                    env.ACCESS_TOKEN_EXPIRY
-                );
-
-                const staffRefreshToken = generateRefreshToken(
-                    {
-                        sub: user.id,
-                        sid: sessionId,
-                        type: userType,
-                        version: staffTokenVersion,
-                        jti: randomUUID()
-                    },
-                    env.JWT_REFRESH_SECRET,
-                    env.REFRESH_TOKEN_EXPIRY
-                );
-
-                const hashRefreshToken = hashToken(staffRefreshToken);
-
-                await prisma.session.create({
-                    data: {
-                        id: sessionId,
-                        userId: user.id,
-                        hashRefreshToken,
-                        ipAddress,
-                        userAgent,
+                    sessionData: {
                         companyId: user.companyId,
-                        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-                    }
+                    },
                 });
 
-                res.cookie("refreshToken", staffRefreshToken, {
+                res.cookie("refreshToken", refreshToken, {
                     httpOnly: true,
                     secure: true,
                     sameSite: "strict",
@@ -230,20 +141,8 @@ export const loginUser =
 
                 return res.status(200).json({
                     message: "Login successfully",
-                    staff: {
-                        id: user.id,
-                        fullName: user.fullName,
-                        email: user.email,
-                        phone: user.phone,
-                        address: user.address,
-                        status: user.status,
-                        roles: user.roles,
-                        companyId: user.companyId,
-                        createdAt: user.createdAt,
-                        updatedAt: user.updatedAt,
-                        createdBy: user.createdBy
-                    },
-                    token: staffAccessToken,
+                    staff: mapStaff(user),
+                    token: accessToken,
                 });
 
             } else {
@@ -404,52 +303,109 @@ export const logoutAllDevices =
         }
     }
 
-export const getUser =
-    async (req: Request, res: Response, next: NextFunction) => {
-        try {
+export const getUser = (req: Request, res: Response, next: NextFunction) => {
+    try {
 
-            if (req.admin) {
-                return res.status(200).send({
-                    message: "Admin retrieved successfully",
-                    admin: {
-                        id: req.admin.id,
-                        fullName: req.admin.fullName,
-                        email: req.admin.email,
-                        phone: req.admin.phone,
-                        address: req.admin.address,
-                        role: req.admin.role,
-                        status: req.admin.status,
-                        createdAt: req.admin.createdAt,
-                        updatedAt: req.admin.updatedAt,
-                    }
-                });
+        if (req.admin) {
+            return res.status(200).send({
+                message: "Admin retrieved successfully",
+                admin: {
+                    id: req.admin.id,
+                    fullName: req.admin.fullName,
+                    email: req.admin.email,
+                    phone: req.admin.phone,
+                    address: req.admin.address,
+                    role: req.admin.role,
+                    status: req.admin.status,
+                    createdAt: req.admin.createdAt,
+                    updatedAt: req.admin.updatedAt,
+                }
+            });
 
-            } else if (req.staff) {
-                return res.status(200).json({
-                    message: "Staff retrieved successfully",
-                    staff: {
-                        id: req.staff.id,
-                        fullName: req.staff.fullName,
-                        email: req.staff.email,
-                        phone: req.staff.phone,
-                        address: req.staff.address,
-                        roles: req.staff.roles,
-                        status: req.staff.status,
-                        createdAt: req.staff.createdAt,
-                        updatedAt: req.staff.updatedAt,
-                        createdBy: req.staff.createdBy,
-                        companyId: req.staff.companyId,
-                    }
-                });
+        } else if (req.staff) {
+            return res.status(200).json({
+                message: "Staff retrieved successfully",
+                staff: {
+                    id: req.staff.id,
+                    fullName: req.staff.fullName,
+                    email: req.staff.email,
+                    phone: req.staff.phone,
+                    address: req.staff.address,
+                    roles: req.staff.roles,
+                    status: req.staff.status,
+                    createdAt: req.staff.createdAt,
+                    updatedAt: req.staff.updatedAt,
+                    createdBy: req.staff.createdBy,
+                    companyId: req.staff.companyId,
+                }
+            });
 
-            } else {
-                throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
-            }
-        } catch (err) {
-            logError("Failed to get user information", err);
-            return next(err);
+        } else {
+            throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
         }
+    } catch (err) {
+        logError("Failed to get user information", err);
+        return next(err);
     }
+}
+
+const createUserSession = async ({
+    user,
+    userType,
+    ipAddress,
+    userAgent,
+    accessPayload,
+    sessionData = {}
+}: {
+    user: any;
+    userType: UserType;
+    ipAddress: string;
+    userAgent: string;
+    accessPayload: Record<string, any>;
+    sessionData?: Record<string, any>;
+}) => {
+
+    const sessionId = crypto.randomUUID();
+
+    const accessToken = generateAccessToken(
+        {
+            sub: user.id,
+            type: userType,
+            sid: sessionId,
+            version: user.tokenVersion,
+            jti: randomUUID(),
+            ...accessPayload,
+        },
+        env.JWT_ACCESS_SECRET,
+        env.ACCESS_TOKEN_EXPIRY
+    );
+
+    const refreshToken = generateRefreshToken(
+        {
+            sub: user.id,
+            sid: sessionId,
+            type: userType,
+            version: user.tokenVersion,
+            jti: randomUUID(),
+        },
+        env.JWT_REFRESH_SECRET,
+        env.REFRESH_TOKEN_EXPIRY
+    );
+
+    await prisma.session.create({
+        data: {
+            id: sessionId,
+            userId: user.id,
+            hashRefreshToken: hashToken(refreshToken),
+            ipAddress,
+            userAgent,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            ...sessionData,
+        },
+    });
+
+    return { accessToken, refreshToken };
+}
 
 async function checkUserPassword(password: string, hashPassword: string) {
 
@@ -486,7 +442,7 @@ async function findUserForLogin(loginIdentifier: string) {
                 { email: loginIdentifier.toLowerCase() },
                 { phone: loginIdentifier }
             ]
-        }
+        },
     });
 
     if (admin) {

@@ -9,6 +9,7 @@ export function generateSku() {
 
 // batch number generate
 export async function generateBatchNumber(tx: any, companyId: string) {
+
     const date = new Date().toISOString().slice(0, 10).replaceAll('-', "");
     let sequence = 1;
 
