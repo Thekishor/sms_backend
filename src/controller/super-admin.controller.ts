@@ -3,7 +3,7 @@ import AppError from "../utils/AppError.js"
 import { logError } from "../config/logger.js";
 import { redisOperation } from "../utils/redis.operation.js";
 import { prisma } from "../config/database.js";
-import type { SuperAdmin } from "@prisma/client";
+import { SuperAdminResponse } from "../types/UserDto.js";
 
 export const getMeSuperAdmin = (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -13,15 +13,7 @@ export const getMeSuperAdmin = (req: Request, res: Response, next: NextFunction)
 
         return res.status(200).json({
             message: "Super Admin retrieved successfully",
-            superAdmin: {
-                id: req.superadmin.id,
-                fullName: req.superadmin.fullName,
-                email: req.superadmin.email,
-                phone: req.superadmin.phone,
-                role: req.superadmin.role,
-                createdAt: req.superadmin.createdAt,
-                updatedAt: req.superadmin.updatedAt,
-            }
+            superAdmin: mapSuperAdmin(req.superadmin)
         });
 
     } catch (err) {
@@ -66,7 +58,14 @@ export const logoutSuperAdmin =
         }
     }
 
-export function mapSuperAdmin(superAdmin: SuperAdmin) {
+export const storeBlacklistedToken = async (token: string, expiry: number) => {
+
+    const ttl = expiry - Math.floor(Date.now() / 1000);
+    const key = `blacklisted::${token}`;
+    await redisOperation.setEx(key, ttl, "blacklisted");
+};
+
+export function mapSuperAdmin(superAdmin: SuperAdminResponse) {
     return {
         id: superAdmin.id,
         fullName: superAdmin.fullName,
@@ -77,11 +76,3 @@ export function mapSuperAdmin(superAdmin: SuperAdmin) {
         updatedAt: superAdmin.updatedAt,
     }
 };
-
-export const storeBlacklistedToken =
-    async (token: string, expiry: number,) => {
-
-        const ttl = expiry - Math.floor(Date.now() / 1000);
-        const key = `blacklisted::${token}`;
-        await redisOperation.setEx(key, ttl, "blacklisted");
-    };

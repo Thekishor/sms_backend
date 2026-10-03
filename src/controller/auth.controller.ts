@@ -57,13 +57,13 @@ export const loginUser =
                 await checkUserPassword(password, user.password);
 
                 // generate access token and return
-                const superAdminAccessToken = generateAccessToken(
+                const accessToken = generateAccessToken(
                     { sub: user.id, role: user.role, type: userType, jti: randomUUID() },
                     env.SUPERADMIN_JWT_ACCESS_SECRET,
                     env.SUPERADMIN_JWT_ACCESS_EXPIRY,
                 );
 
-                const hashAccessToken = hashToken(superAdminAccessToken);
+                const hashAccessToken = hashToken(accessToken);
 
                 await prisma.superAdmin.update({
                     where: { id: user.id },
@@ -76,7 +76,7 @@ export const loginUser =
                 return res.status(200).json({
                     message: "Login successfully",
                     superAdmin: mapSuperAdmin(user),
-                    token: superAdminAccessToken,
+                    token: accessToken,
                 });
 
             } else if (userType === UserType.ADMIN) {
@@ -96,7 +96,7 @@ export const loginUser =
                     secure: true,
                     sameSite: 'strict',
                     maxAge: 7 * 24 * 60 * 60 * 1000,
-                })
+                });
 
                 return res.status(200).json({
                     message: "Login successfully",
@@ -319,10 +319,6 @@ export const logoutUser =
 
                 await logoutFromSystem(adminId, sessionId, tokenInfo, res);
 
-                return res.status(200).json({
-                    message: "Logged out successfully",
-                });
-
             } else if (req.staff) {
 
                 const staffId = req.staff.id;
@@ -334,10 +330,6 @@ export const logoutUser =
                 }
 
                 await logoutFromSystem(staffId, sessionId, tokenInfo, res);
-
-                return res.status(200).json({
-                    message: "Logged out successfully",
-                });
 
             } else {
                 throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
@@ -357,12 +349,8 @@ export const logoutAllDevices =
 
                 const adminId = req.admin.id;
 
-                await prisma.session.updateMany({
+                await prisma.session.deleteMany({
                     where: { userId: adminId, revoked: false },
-                    data: {
-                        hashRefreshToken: null,
-                        revoked: true
-                    }
                 });
 
                 await prisma.admin.update({
@@ -370,7 +358,7 @@ export const logoutAllDevices =
                     data: {
                         tokenVersion: { increment: 1 }
                     }
-                })
+                });
 
                 return res.status(200).send({
                     message: "Logged out from all devices successfully"
@@ -380,12 +368,8 @@ export const logoutAllDevices =
 
                 const staffId = req.staff.id;
 
-                await prisma.session.updateMany({
+                await prisma.session.deleteMany({
                     where: { userId: staffId, revoked: false },
-                    data: {
-                        hashRefreshToken: null,
-                        revoked: true
-                    }
                 });
 
                 await prisma.staff.update({
@@ -413,35 +397,13 @@ export const getUser = (req: Request, res: Response, _: NextFunction) => {
     if (req.admin) {
         return res.status(200).send({
             message: "Admin retrieved successfully",
-            admin: {
-                id: req.admin.id,
-                fullName: req.admin.fullName,
-                email: req.admin.email,
-                phone: req.admin.phone,
-                address: req.admin.address,
-                role: req.admin.role,
-                status: req.admin.status,
-                createdAt: req.admin.createdAt,
-                updatedAt: req.admin.updatedAt,
-            }
+            admin: mapAdmin(req.admin)
         });
 
     } else if (req.staff) {
         return res.status(200).json({
             message: "Staff retrieved successfully",
-            staff: {
-                id: req.staff.id,
-                fullName: req.staff.fullName,
-                email: req.staff.email,
-                phone: req.staff.phone,
-                address: req.staff.address,
-                roles: req.staff.roles,
-                status: req.staff.status,
-                createdAt: req.staff.createdAt,
-                updatedAt: req.staff.updatedAt,
-                createdBy: req.staff.createdBy,
-                companyId: req.staff.companyId,
-            }
+            staff: mapStaff(req.staff)
         });
 
     } else {
@@ -657,6 +619,10 @@ async function logoutFromSystem(
     );
 
     res.clearCookie("refreshToken");
+
+    return res.status(200).json({
+        message: "Logged out successfully",
+    });
 }
 
 export const getRequestMetadata = (req: Request) => {

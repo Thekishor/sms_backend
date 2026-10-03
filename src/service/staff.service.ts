@@ -6,13 +6,14 @@ import {
 import { prisma } from "../config/prisma.js";
 import AppError, { STATUS_ERROR } from "../utils/AppError.js";
 import { hashPassword } from "../utils/hash.js";
-import { Prisma, Staff, Status } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 import {
     StaffResponseDto,
     StaffsResponseDto
 } from "../schemas/response/response.dto.js";
 import { PERMISSIONS } from "../utils/permissions.js";
 import { redisOperation } from "../utils/redis.operation.js";
+import { StaffResponse } from "../types/UserDto.js";
 
 export const createStaffService =
     async (data: StaffDto, adminId: string, companyId: string):
@@ -262,7 +263,7 @@ async function verifyStaff(staffId: string, companyId: string) {
     return staff;
 }
 
-export function mapStaff(staff: Staff) {
+export function mapStaff(staff: StaffResponse) {
     return {
         id: staff.id,
         fullName: staff.fullName,

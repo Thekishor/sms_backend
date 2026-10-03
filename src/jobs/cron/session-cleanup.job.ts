@@ -17,7 +17,8 @@ corn.schedule('5 13 * * *', async () => {
                     lt: new Date(now.getTime() - 24 * 60 * 60 * 1000)
                 }
             },
-        })
+        });
+
     } catch (error) {
         logError("Failed to delete revoked/expired sessions", error);
     }

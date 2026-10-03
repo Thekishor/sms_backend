@@ -8,10 +8,10 @@ import {
 } from "../schemas/request/request.dto.js";
 import AppError, { STATUS_ERROR } from "../utils/AppError.js";
 import { checkPassword, hashPassword } from "../utils/hash.js";
-import { Admin, OtpType, Prisma, Role, Status } from "@prisma/client";
+import { OtpType, Prisma, Role, Status } from "@prisma/client";
 import { generateOtp } from "../utils/code.generate.js";
 import { EMAIL_TEMPLATES } from "../utils/templates.js";
-import { AttemptOtpCount } from "../types/UserDto.js";
+import { AdminResponse, AttemptOtpCount } from "../types/UserDto.js";
 import logger from "../config/logger.js";
 import {
     AdminResponseDto, AdminsResponseDto,
@@ -690,7 +690,7 @@ async function generateOtpAndStoreInRedis(email: string, type: string) {
     return otp;
 }
 
-export function mapAdmin(admin: Admin) {
+export function mapAdmin(admin: AdminResponse) {
     return {
         id: admin.id,
         fullName: admin.fullName,
