@@ -46,7 +46,7 @@ export const createCompanyService =
 
         if (company) {
 
-            if (company.email === email && company.status === Status.ACTIVE) {
+            if (company.email === email) {
                 throw new AppError(
                     "A company with this email already exists",
                     409,
@@ -54,7 +54,7 @@ export const createCompanyService =
                 );
             }
 
-            if (company.phone === phone && company.status === Status.ACTIVE) {
+            if (company.phone === phone) {
                 throw new AppError(
                     "A company with this phone number already exists",
                     409,
@@ -69,27 +69,34 @@ export const createCompanyService =
             );
         }
 
-        const createdCompany = await prisma.company.create({
-            data: {
-                name, email, phone, address, createdBy: adminId, status: Status.PENDING
-            }
-        });
+        const createdCompany = await prisma.$transaction(async (tx) => {
 
-        const subStart = new Date();
-        const subEnd = new Date(subStart);
-        subEnd.setDate(subEnd.getDate() + 15);
-        let duration = Math.ceil((subEnd.getTime() - subStart.getTime()) / (1000 * 60 * 60 * 24));
+            // create company first
+            const company = await tx.company.create({
+                data: {
+                    name, email, phone, address, createdBy: adminId, status: Status.PENDING
+                }
+            });
 
-        await prisma.subscription.create({
-            data: {
-                companyId: createdCompany.id,
-                type: SubscriptionType.TRIAL,
-                duration,
-                startDate: subStart,
-                endDate: subEnd,
-                amount: new Prisma.Decimal(0),
-                paymentStatus: SubscriptionPaymentStatus.NOT_APPLICABLE
-            }
+            // Create 15-day trial subscription
+            const subStart = new Date();
+            const subEnd = new Date(subStart);
+            subEnd.setDate(subEnd.getDate() + 15);
+            let duration = Math.ceil((subEnd.getTime() - subStart.getTime()) / (1000 * 60 * 60 * 24));
+
+            await tx.subscription.create({
+                data: {
+                    companyId: company.id,
+                    type: SubscriptionType.TRIAL,
+                    duration,
+                    startDate: subStart,
+                    endDate: subEnd,
+                    amount: new Prisma.Decimal(0),
+                    paymentStatus: SubscriptionPaymentStatus.NOT_APPLICABLE
+                }
+            });
+
+            return company;
         });
 
         // Save notification in database for super admins
