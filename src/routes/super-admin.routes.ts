@@ -109,17 +109,17 @@ router.patch(
 
 // create paid subscription after full payment
 router.post(
-    "/subscriptions/:id/payments", 
-    verifySuperAdminToken, 
-    validateParams(paramsSchema), 
-    validateRequest(subscriptionPaymentSchema), 
+    "/subscriptions/:id/payments",
+    verifySuperAdminToken,
+    validateParams(paramsSchema),
+    validateRequest(subscriptionPaymentSchema),
     createSubscriptionPayment
 );
 
 // get single or latest payment of subscription
 router.get(
-    "/subscriptions/:id/payments", 
-    verifySuperAdminToken, 
+    "/subscriptions/:id/payments",
+    verifySuperAdminToken,
     validateParams(paramsSchema),
     getSubscriptionPaymentById
 );
@@ -134,8 +134,8 @@ router.get(
 
 // get subscription payment by payment id
 router.get(
-    "/subscriptions/payments/:id", 
-    verifySuperAdminToken, 
+    "/subscriptions/payments/:id",
+    verifySuperAdminToken,
     validateParams(paramsSchema),
     getSubscriptionByPaymentId
 );

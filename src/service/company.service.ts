@@ -389,14 +389,6 @@ export async function verifyCompany(companyId: string) {
         throw new AppError("Company not found", 404, "COMPANY_NOT_FOUND");
     }
 
-    if (company.status !== Status.ACTIVE) {
-        throw new AppError(
-            `Access denied. Company is ${company.status.toLowerCase()}.`,
-            403,
-            `COMPANY_${company.status}`
-        );
-    }
-
     return company;
 }
 

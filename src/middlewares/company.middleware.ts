@@ -3,6 +3,7 @@ import { logError } from '../config/logger.js';
 import AppError from '../utils/AppError.js';
 import { prisma } from '../config/database.js';
 import { Status } from '@prisma/client';
+import { verifyCompany } from '../service/company.service.js';
 
 export const requireCompany =
     async (req: Request, _: Response, next: NextFunction) => {
@@ -16,17 +17,7 @@ export const requireCompany =
                     throw new AppError("Company Id is required", 400, "COMPANY_ID_REQUIRED");
                 }
 
-                const company = await prisma.company.findUnique({
-                    where: { id: companyId }
-                });
-
-                if (!company) {
-                    throw new AppError(
-                        "Company not found",
-                        404,
-                        "COMPANY_NOT_FOUND"
-                    );
-                }
+                const company = await verifyCompany(companyId);
 
                 if (company.status !== Status.ACTIVE) {
                     throw new AppError(
