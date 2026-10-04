@@ -499,7 +499,7 @@ export const getAdmins =
                     }
                 }),
                 prisma.admin.count({ where })
-            ])
+            ]);
 
             if (admins.length === 0) {
                 return { admins: [], total: 0 }

@@ -23,7 +23,7 @@ import {
     updateSubscription,
 } from "../controller/subscription.controller.js";
 import {
-    createSubscriptionPayment,
+    createPaidSubscription,
     getAllSubscriptionPayments,
     getSubscriptionByPaymentId,
     getSubscriptionPaymentById,
@@ -40,16 +40,28 @@ import { paramsSchema, subscriptionPaymentSchema } from "../schemas/request/requ
 const router = Router();
 
 /* super admin */
+
+// logout super admin
 router.post("/auth/logout", verifySuperAdminToken, logoutSuperAdmin);
+
+// get current logged in information
 router.get("/me", verifySuperAdminToken, getMeSuperAdmin);
 
 /* admins*/
+
+// get all admin by super admin
 router.get("/admins", verifySuperAdminToken, getAllAdmins);
+
+// get specific admin by id
 router.get("/admins/:id", verifySuperAdminToken, validateParams(paramsSchema), getAdminById);
+
+// get all company with specific admin
 router.get("/admins/:id/companies", verifySuperAdminToken, validateParams(paramsSchema), getCompaniesWithAdmin);
+
+// delete admin by super admin only
 router.delete("/admins/:id", verifySuperAdminToken, validateParams(paramsSchema), deleteAdminById);
 
-// change admin status by super admin
+// changing admin status by super admin
 router.patch(
     "/admins/:id/status",
     verifySuperAdminToken,
@@ -71,6 +83,8 @@ router.patch(
 );
 
 /* companies subscription */
+
+// get all subscription by super admin
 router.get("/subscriptions", verifySuperAdminToken, getAllSubscriptions);
 
 // send subscription reminder mail to company by super admin
@@ -113,7 +127,7 @@ router.post(
     verifySuperAdminToken,
     validateParams(paramsSchema),
     validateRequest(subscriptionPaymentSchema),
-    createSubscriptionPayment
+    createPaidSubscription
 );
 
 // get single or latest payment of subscription

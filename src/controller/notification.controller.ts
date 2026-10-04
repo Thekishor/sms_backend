@@ -13,6 +13,7 @@ import {
 export const getNotifications =
     async (req: Request, res: Response, next: NextFunction) => {
         try {
+
             if (!req.superadmin) {
                 throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
             }

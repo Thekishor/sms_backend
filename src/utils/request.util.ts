@@ -26,6 +26,7 @@ export function requireAdmin(req: Request): string {
 }
 
 export function requireSuperAdmin(req: Request): string {
+
     if (!req.superadmin) {
         throw new AppError(
             "Unauthorized",

@@ -39,10 +39,6 @@ export const subscriptionPaymentService =
             throw new AppError("Subscription not found", 404, "SUBSCRIPTION_NOT_FOUND");
         }
 
-        if (subscription.type === SubscriptionType.TRIAL) {
-            throw new AppError("Subscription is in trial period, cannot create payment", 400, "SUBSCRIPTION_IN_TRIAL_PERIOD");
-        }
-
         if (subscription.status !== SubscriptionStatus.ACTIVE) {
             throw new AppError("Subscription is not active, cannot create payment", 400, "SUBSCRIPTION_NOT_ACTIVE");
         }

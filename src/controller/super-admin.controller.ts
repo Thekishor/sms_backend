@@ -6,20 +6,16 @@ import { prisma } from "../config/database.js";
 import { SuperAdminResponse } from "../types/UserDto.js";
 
 export const getMeSuperAdmin = (req: Request, res: Response, next: NextFunction) => {
-    try {
-        if (!req.superadmin) {
-            throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
-        }
 
-        return res.status(200).json({
-            message: "Super Admin retrieved successfully",
-            superAdmin: mapSuperAdmin(req.superadmin)
-        });
-
-    } catch (err) {
-        logError("Failed to get superadmin", err);
-        return next(err);
+    if (!req.superadmin) {
+        return next(new AppError("Unauthorized", 401, "UNAUTHORIZED"));
     }
+
+    return res.status(200).json({
+        message: "Super Admin retrieved successfully",
+        superAdmin: mapSuperAdmin(req.superadmin)
+    });
+
 };
 
 export const logoutSuperAdmin =
@@ -49,7 +45,7 @@ export const logoutSuperAdmin =
             }
 
             return res.status(200).json({
-                message: "Super admin logged out successfully"
+                message: "Logged out successfully"
             });
 
         } catch (err) {

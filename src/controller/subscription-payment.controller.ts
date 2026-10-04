@@ -13,7 +13,7 @@ import {
 } from "../service/subscription-payment.service.js";
 import { parseQuery } from "../utils/query.util.js";
 
-export const createSubscriptionPayment =
+export const createPaidSubscription =
     async (req: Request, res: Response, next: NextFunction) => {
         try {
 

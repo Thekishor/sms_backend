@@ -215,6 +215,7 @@ export const getCompaniesWithAdmin =
             return next(err);
         }
     }
+
 export const getAllAdmins =
     async (req: Request, res: Response, next: NextFunction) => {
         try {
