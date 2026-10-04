@@ -1,6 +1,6 @@
-# School & Inventory Management System (SMS) Backend
+# SMS Backend
 
-A production-grade, multi-tenant SaaS School and Inventory Management System (SMS/EMS) backend built with Node.js, Express, TypeScript, Prisma ORM, Neon PostgreSQL, Redis Cloud, and WebSockets.
+A production-grade, multi-tenant SMS backend system built with Node.js, Express, TypeScript, Prisma ORM, Neon PostgreSQL, Redis Cloud, and WebSockets.
 
 ---
 
@@ -16,7 +16,7 @@ A production-grade, multi-tenant SaaS School and Inventory Management System (SM
 
 - Multi-device session tracking (`Session` model tracking IP address, User-Agent, and token revocation).
 - Single-device and all-device logout (`/logout` and `/logout-all`).
-- Automatic OTP email verification and password resets using **Resend**.
+- Automatic OTP email verification and password resets using **Resend** & **BullMQ**.
 - JWT Authentication (Access and Refresh tokens).
 - Blacklisted tokens for revocation using Redis for real time security.
 
@@ -68,11 +68,11 @@ A production-grade, multi-tenant SaaS School and Inventory Management System (SM
 - **Database ORM:** Prisma ORM
 - **Database Engine:** PostgreSQL (neon)
 - **Caching & Session Storage:** Redis Cloud
-- **E-mail Service:** Resend API
+- **E-mail Service:** Resend API & BullMQ
 - **Real-Time updates:** Socket.io
 - **Logger:** Winston (with Daily File Rotation)
 - **Validation:** Zod schemas
-- **Doc Gen:** Swagger / `@asteasolutions/zod-to-openapi`
+- **Doc Gen:** Swagger
 
 ---
 
@@ -92,6 +92,7 @@ sms_backend/
 │   ├── dto/                    # Data Transfer Objects
 │   ├── jobs/                   # Background Cron Schedulers
 │   ├── middlewares/            # Auth guards, Role & Permission filters, Error handler
+│   ├── queues/                 # BullMQ config and worker settings
 │   ├── routes/                 # Express Route controllers (auth, admins, super-admin, company)
 │   ├── schemas/                # Zod schemas for input validation & response mappings
 │   ├── service/                # Business logic (e.g., Email service, Realtime notifications)
@@ -157,7 +158,8 @@ Make sure you have the following installed on your machine:
    REDIS_URL=""
 
    # Email service
-   RESEND_API_KEY=re_your_resend_api_key
+   RESEND_API_KEY=""
+   DOMAIN=""
 
    # SuperAdmin Seeding & Admin setup
    SUPERADMIN_FULLNAME="Super Admin"
@@ -195,6 +197,7 @@ Make sure you have the following installed on your machine:
    ```
 
 7. **Run the development server:**
+
    ```bash
    npm run dev
    ```
