@@ -7,16 +7,16 @@ datasource db {
 }
 
 model SuperAdmin {
-  id        String    @id @default(uuid(7))
-  fullName  String
-  email     String    @unique
-  password  String
-  phone     String    @unique
-  role      String    @default("SUPERADMIN")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  lastToken String?
-  expiresAt DateTime?
+  id             String    @id @default(uuid(7))
+  fullName       String
+  email          String    @unique
+  password       String
+  phone          String    @unique
+  role           String    @default("SUPERADMIN")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  lastToken      String?
+  tokenExpiresAt DateTime?
 
   @@map("super_admins")
 }
@@ -29,7 +29,6 @@ model Admin {
   password     String
   address      String
   role         Role     @default(ADMIN)
-  approvedBy   String?
   status       Status   @default(INACTIVE)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

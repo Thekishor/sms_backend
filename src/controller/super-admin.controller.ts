@@ -29,14 +29,14 @@ export const logoutSuperAdmin =
             const tokenInfo = req.tokenInfo;
             const superAdmin = req.superadmin;
 
-            if (superAdmin.expiresAt && superAdmin.expiresAt > new Date()) {
+            if (superAdmin.tokenExpiresAt && superAdmin.tokenExpiresAt > new Date()) {
 
                 // make token null
                 await prisma.superAdmin.update({
                     where: { id: superAdmin.id },
                     data: {
                         lastToken: null,
-                        expiresAt: null
+                        tokenExpiresAt: null
                     },
                 });
 

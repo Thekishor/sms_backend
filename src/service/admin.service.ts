@@ -127,6 +127,8 @@ export const register =
         try {
             otp = await generateOtpAndStoreInRedis(email, OtpType.EMAIL_VERIFICATION);
         } catch {
+
+            // delete admin from database
             await prisma.admin.delete({
                 where: {
                     id: registerAdmin.id
@@ -134,7 +136,7 @@ export const register =
             });
 
             throw new AppError(
-                "Registration service is temporarily unavailable. Please try again shortly.",
+                "Verification service is temporarily unavailable. Please try again shortly.",
                 503,
                 "SERVICE_UNAVAILABLE"
             );
@@ -165,7 +167,11 @@ export const verifyAccount =
         try {
             registerAdminOtp = await redisOperation.get(otpAdminKey);
         } catch {
-            throw new AppError("Verification service temporarily unavailable. Please try again shortly.", 503, "SERVICE_UNAVAILABLE");
+            throw new AppError(
+                "Verification service temporarily unavailable. Please try again shortly.",
+                503,
+                "SERVICE_UNAVAILABLE"
+            );
         }
 
         if (!registerAdminOtp) {
@@ -202,6 +208,7 @@ export const resendOtp =
         // get from redis
         let adminAttempts: string | null;
         let adminAttemptsTime: number;
+
         try {
             adminAttempts = await redisOperation.get(otpAttemptsKey);
             adminAttemptsTime = await redisOperation.ttl(otpAttemptsKey);
@@ -215,9 +222,9 @@ export const resendOtp =
 
         if (!adminAttempts) {
             throw new AppError(
-                "Admin account not found. Please register again.",
+                "OTP session has expired. Please register again.",
                 400,
-                "ADMIN_NOT_FOUND"
+                "OTP_SESSION_EXPIRED"
             );
         }
 
@@ -251,7 +258,7 @@ export const resendOtp =
             await redisOperation.setEx(otpAttemptsKey, adminAttemptsTime, JSON.stringify(attemptOtpCount));
         }
 
-        if (otpAttempts.attemptCount >= otpAttempts.maxAttemptCount) {
+        if (otpAttempts.attemptCount > otpAttempts.maxAttemptCount) {
 
             attemptOtpCount = {
                 attemptCount: otpAttempts.attemptCount,
@@ -685,7 +692,7 @@ async function generateOtpAndStoreInRedis(email: string, type: string) {
     const otpAttemptsKey = `otp:attempts:admin:${email}:${type}`;
 
     // set to redis
-    await redisOperation.setEx(otpAttemptsKey, 86400, JSON.stringify(attemptOtpCount));
+    await redisOperation.setEx(otpAttemptsKey, 600, JSON.stringify(attemptOtpCount));
 
     return otp;
 }

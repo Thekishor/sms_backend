@@ -51,7 +51,7 @@ CREATE TABLE "super_admins" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "lastToken" TEXT,
-    "expiresAt" TIMESTAMP(3),
+    "tokenExpiresAt" TIMESTAMP(3),
 
     CONSTRAINT "super_admins_pkey" PRIMARY KEY ("id")
 );
@@ -65,7 +65,6 @@ CREATE TABLE "admins" (
     "password" TEXT NOT NULL,
     "address" TEXT NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'ADMIN',
-    "approvedBy" TEXT,
     "status" "Status" NOT NULL DEFAULT 'INACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,

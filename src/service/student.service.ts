@@ -27,7 +27,7 @@ export const createStudentService =
             guardianName, guardianPhone, batchId, courseId
         } = data;
 
-         // verify batch
+        // verify batch
         await verifyBatch(batchId, companyId);
 
         // verify course

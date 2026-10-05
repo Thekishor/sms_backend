@@ -59,7 +59,7 @@ export const verifySuperAdminToken =
                 phone: superAdmin.phone,
                 createdAt: superAdmin.createdAt,
                 updatedAt: superAdmin.updatedAt,
-                expiresAt: superAdmin.expiresAt ?? undefined
+                tokenExpiresAt: superAdmin.tokenExpiresAt ?? undefined
             }
 
             req.tokenInfo = {

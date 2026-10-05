@@ -21,9 +21,9 @@ export const createCompany =
             const { company } = await createCompanyService(req.body, adminId);
 
             return res.status(200).json({
-                message: "Company registered successfully",
+                message: "Company registered successfully. Please wait for approval.",
                 company,
-            })
+            });
 
         } catch (err) {
             logError("Failed to create/register company", err);

@@ -17,7 +17,7 @@ interface SuperAdminInfo {
     createdAt: Date;
     updatedAt: Date;
     role: string;
-    expiresAt?: Date;
+    tokenExpiresAt?: Date;
 }
 
 interface AdminInfo extends BaseUserInfo {

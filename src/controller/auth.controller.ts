@@ -600,12 +600,8 @@ async function logoutFromSystem(
         throw new AppError("Invalid session", 401, "INVALID_SESSION");
     }
 
-    await prisma.session.update({
-        where: { id: session.id },
-        data: {
-            hashRefreshToken: null,
-            revoked: true
-        }
+    await prisma.session.delete({
+        where: { id: session.id, userId }
     });
 
     // blacklisted access token

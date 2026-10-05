@@ -75,7 +75,7 @@ export const getNotificationsForUser =
                 skip,
                 take,
             }),
-            
+
             prisma.notification.count({
                 where: { recipientId }
             })
@@ -91,7 +91,7 @@ export const markAsRead =
     ) => {
 
         const notification = await prisma.notification.findUnique({
-            where: { 
+            where: {
                 id: notificationId,
                 recipientId
             }
@@ -103,7 +103,7 @@ export const markAsRead =
 
         const updated = await prisma.notification.update({
             where: { id: notificationId },
-            data: { 
+            data: {
                 isRead: true,
                 readAt: new Date(),
             }
@@ -116,12 +116,12 @@ export const markAllAsRead =
     async (recipientId: string) => {
 
         const result = await prisma.notification.updateMany({
-            where: { 
+            where: {
                 recipientId,
-                isRead: false 
+                isRead: false
             },
             data: {
-                isRead: true, 
+                isRead: true,
                 readAt: new Date(),
             }
         });
