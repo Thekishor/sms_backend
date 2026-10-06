@@ -212,6 +212,14 @@ export const getCompanyService =
 
         const company = await verifyCompany(companyId);
 
+        if (company.status !== Status.ACTIVE) {
+            throw new AppError(
+                STATUS_ERROR[company.status],
+                403,
+                "ACCOUNT_NOT_ACTIVE"
+            );
+        }
+
         return {
             company: mapCompany(company)
         };

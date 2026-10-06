@@ -4,7 +4,7 @@ import { prisma } from "./prisma.js";
 const connectDB = async () => {
     try {
         await prisma.$connect();
-        logger.info("DB Connected  successfully via prisma");
+        logger.info("DB Connected successfully via prisma");
     } catch (error) {
         logError("Database Connection error:", error);
         process.exit(1);

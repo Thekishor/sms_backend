@@ -372,8 +372,16 @@ export const getCompanyActiveSubscriptionService =
             orderBy: { createdAt: "desc" }
         });
 
+        if (!subscription) {
+            throw new AppError(
+                "No subscription found for this company",
+                404,
+                "SUBSCRIPTION_NOT_FOUND"
+            );
+        }
+
         return {
-            subscription: subscription ? mapSubscription(subscription) : null
+            subscription: mapSubscription(subscription)
         };
     }
 

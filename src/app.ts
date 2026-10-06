@@ -24,7 +24,7 @@ export const createApp = (rateLimiters: ReturnType<typeof createRateLimiters>) =
     [
       process.env.CORS_ORIGIN,
       "http://localhost:5173",
-      "http://localhost:5001",
+      "http://localhost:5000",
     ].filter(Boolean),
   );
 

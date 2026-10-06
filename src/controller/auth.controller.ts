@@ -69,7 +69,7 @@ export const loginUser =
                     where: { id: user.id },
                     data: {
                         lastToken: hashAccessToken,
-                        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                        tokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
                     },
                 });
 

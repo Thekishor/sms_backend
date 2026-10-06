@@ -31,7 +31,7 @@ export const createStaffService =
 
         if (existsStaff) {
 
-            if (existsStaff.email === email && existsStaff.status === Status.ACTIVE) {
+            if (existsStaff.email === email) {
                 throw new AppError(
                     "A staff member with this email already exists",
                     409,
@@ -39,7 +39,7 @@ export const createStaffService =
                 );
             }
 
-            if (existsStaff.phone === phone && existsStaff.status === Status.ACTIVE) {
+            if (existsStaff.phone === phone) {
                 throw new AppError(
                     "A staff member with this phone number already exists",
                     409,

@@ -22,9 +22,9 @@ export const requireSubscription =
 
             if (!subscription) {
                 throw new AppError(
-                    "A subscription is required to access this feature",
-                    403,
-                    "SUBSCRIPTION_REQUIRED"
+                    "No subscription found for this company",
+                    404,
+                    "SUBSCRIPTION_NOT_FOUND"
                 );
             }
 

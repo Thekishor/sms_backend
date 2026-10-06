@@ -142,7 +142,9 @@ export const loginSchema = z.object({
             example: "kishorpandey981@gmail.com or 9865432109"
         }),
 
-    password: z.string().min(1, "Password is required")
+    password: z.string().min(1, "Password is required").openapi({
+        example: "Kishor@123"
+    })
 });
 
 export const createAdminSchema = z.object({
