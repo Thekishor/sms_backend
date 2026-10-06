@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import {
-    paginationSchema,
+    PaginationQuery,
 } from "../schemas/request/request.dto.js";
 import {
     changedStaffStatusService,
@@ -9,8 +9,6 @@ import {
     getAllStaffService,
     getStaffService, updateStaffService
 } from "../service/staff.service.js";
-import AppError from "../utils/AppError.js";
-import z from "zod";
 import { logError } from '../config/logger.js';
 import { parseQuery } from "../utils/query.util.js";
 import { requireAdmin, requireCompanyId } from "../utils/request.util.js";
@@ -63,19 +61,10 @@ export const getAllStaff =
 
             // only validate
             requireAdmin(req);
+
             const companyId = requireCompanyId(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { staffs, total } = await getAllStaffService(
                 companyId,

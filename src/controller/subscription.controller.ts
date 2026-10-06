@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { z } from "zod";
 import { logError } from "../config/logger.js";
-import AppError from "../utils/AppError.js";
-import { paginationSchema } from "../schemas/request/request.dto.js";
+import { PaginationQuery } from "../schemas/request/request.dto.js";
 import { verifyCompany } from "../service/company.service.js";
 import {
     cancelTrialSubscriptionService,
@@ -20,18 +18,8 @@ export const getCompanySubscriptions =
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const company = await verifyCompany(req.params.id);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { subscriptions, total } = await getCompanySubscriptionsService(
                 skip,
@@ -56,18 +44,8 @@ export const getActiveCompanySubscriptions =
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const company = await verifyCompany(req.params.id);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { subscriptions, total } = await getActiveSubscriptions(
                 skip,
@@ -93,18 +71,8 @@ export const getAllSubscriptions =
         try {
 
             const superAdminId = requireSuperAdmin(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { subscriptions, total } = await getAllSubscriptionsService(
                 skip,

@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import {
-    paginationSchema
+    PaginationQuery
 } from "../schemas/request/request.dto.js";
-import { z } from "zod";
 import {
     register, verifyAccount, forgotPassword,
     resendOtp, resetPassword,
@@ -221,19 +220,8 @@ export const getAllAdmins =
         try {
 
             const superAdminId = requireSuperAdmin(req);
-
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { admins, total } = await getAdmins(
                 superAdminId,

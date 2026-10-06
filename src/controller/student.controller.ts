@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { paginationSchema } from "../schemas/request/request.dto.js";
-import { z } from "zod";
+import { PaginationQuery } from "../schemas/request/request.dto.js";
 import {
     changedStatus,
     createStudentService, deleteStudent, getFeeAccountService,
@@ -9,7 +8,6 @@ import {
 } from "../service/student.service.js";
 import { parseQuery } from "../utils/query.util.js";
 import { logError } from "../config/logger.js";
-import AppError from "../utils/AppError.js";
 import { requireCompanyId } from "../utils/request.util.js";
 
 export const createStudent =
@@ -36,18 +34,8 @@ export const getAllStudents =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { students, total } = await getStudents(
                 companyId,

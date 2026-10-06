@@ -15,7 +15,6 @@ import {
     createCourse,
     deleteCourse,
     getAllCourses,
-    getAllCoursesWithStudents,
     getCourseById,
     updateCourse
 } from "../controller/course.controller.js";
@@ -64,8 +63,8 @@ import {
 } from "../controller/stock-history.controller.js";
 import { requireSubscription } from "../middlewares/subscription.middleware.js";
 import { createRateLimiters } from "../config/rate-limiter.js";
-import { validateParams, validateRequest } from "../middlewares/validate.middleware.js";
-import { paramsSchema, studentSchema, studentUpdateSchema } from "../schemas/request/request.dto.js";
+import { validateParams, validateQuery, validateRequest } from "../middlewares/validate.middleware.js";
+import { batchSchema, courseSchema, paginationSchema, paramsSchema, studentSchema, studentUpdateSchema } from "../schemas/request/request.dto.js";
 
 export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters>) {
 
@@ -91,6 +90,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateQuery(paginationSchema),
         getAllStudents
     );
 
@@ -170,6 +170,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateQuery(paginationSchema),
         getAllBatchesWithStudents
     );
 
@@ -180,6 +181,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateRequest(batchSchema),
         createBatch
     );
 
@@ -190,6 +192,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateQuery(paginationSchema),
         getAllBatches
     );
 
@@ -200,6 +203,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
         getBatchById
     );
 
@@ -210,6 +214,8 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
+        validateRequest(batchSchema),
         updateBatch
     );
 
@@ -220,20 +226,11 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
         deleteBatch
     );
 
     /* courses routes */
-
-    // get all courses with students
-    router.get("/courses/students",
-        verifyToken,
-        roleMiddleware([Role.MANAGER, Role.RECEPTIONIST]),
-        permissionMiddleware([PERMISSIONS.SMS]),
-        requireCompany,
-        requireSubscription,
-        getAllCoursesWithStudents
-    );
 
     // create course
     router.post("/courses",
@@ -242,6 +239,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateRequest(courseSchema),
         createCourse
     );
 
@@ -252,6 +250,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateQuery(paginationSchema),
         getAllCourses
     );
 
@@ -262,6 +261,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
         getCourseById
     );
 
@@ -272,6 +272,8 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
+        validateRequest(courseSchema),
         updateCourse
     );
 
@@ -282,6 +284,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
         deleteCourse
     );
 

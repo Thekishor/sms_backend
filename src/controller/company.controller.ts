@@ -1,9 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import AppError from "../utils/AppError.js";
-import { paginationSchema } from "../schemas/request/request.dto.js";
+import { PaginationQuery } from "../schemas/request/request.dto.js";
 import { logError } from "../config/logger.js";
 import { parseQuery } from "../utils/query.util.js";
-import { z } from "zod";
 import {
     createCompanyService,
     deleteCompanyService, getAllCompanies,
@@ -56,18 +54,8 @@ export const getAllCompaniesByAdmin =
         try {
 
             const adminId = requireAdmin(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { companies, total } = await getAllCompaniesService(
                 adminId,
@@ -137,18 +125,8 @@ export const getAllCompaniesBySuperAdmin =
 
         try {
             const superAdminId = requireSuperAdmin(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { companies, total } = await getAllCompanies(
                 superAdminId,

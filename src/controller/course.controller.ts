@@ -1,16 +1,13 @@
 import { Request, Response, NextFunction } from "express";
-import { courseSchema, paginationSchema } from "../schemas/request/request.dto.js";
-import { z } from "zod";
+import { PaginationQuery } from "../schemas/request/request.dto.js";
 import {
     createCourseService,
     deleteCourseService,
     getCourse,
-    getCourses,
-    getCoursesWithStudents, updateCourseService
+    getCourses, updateCourseService
 } from "../service/course.service.js";
 import { parseQuery } from "../utils/query.util.js";
 import { logError } from "../config/logger.js";
-import AppError from "../utils/AppError.js";
 import { requireCompanyId } from "../utils/request.util.js";
 
 export const createCourse =
@@ -18,18 +15,8 @@ export const createCourse =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = courseSchema.safeParse(req.body);
 
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { course } = await createCourseService(companyId, result.data);
+            const { course } = await createCourseService(companyId, req.body);
 
             return res.status(200).json({
                 message: "Course created successfully",
@@ -67,18 +54,8 @@ export const getAllCourses =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { courses, total } = await getCourses(
                 companyId,
@@ -95,44 +72,6 @@ export const getAllCourses =
 
         } catch (err) {
             logError("Failed to get courses", err);
-            return next(err);
-        }
-    }
-
-export const getAllCoursesWithStudents =
-    async (req: Request, res: Response, next: NextFunction) => {
-        try {
-
-            const companyId = requireCompanyId(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
-
-            const { courses, total } = await getCoursesWithStudents(
-                companyId,
-                skip,
-                take,
-                search,
-                orderBy
-            );
-
-            return res.status(200).json({
-                message: "Courses retrieved successfully",
-                courses,
-                total
-            });
-
-        } catch (err) {
-            logError("Failed to get courses with students", err);
             return next(err);
         }
     }
@@ -162,18 +101,8 @@ export const updateCourse =
 
             const companyId = requireCompanyId(req);
             const courseId = req.params.id;
-            const result = courseSchema.safeParse(req.body);
 
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { course } = await updateCourseService(companyId, courseId, result.data);
+            const { course } = await updateCourseService(companyId, courseId, req.body);
 
             return res.status(200).json({
                 message: "Course updated successfully",

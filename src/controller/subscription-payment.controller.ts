@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { z } from "zod";
 import { logError } from "../config/logger.js";
-import AppError from "../utils/AppError.js";
-import { paginationSchema } from "../schemas/request/request.dto.js";
+import { PaginationQuery } from "../schemas/request/request.dto.js";
 import { requireSuperAdmin } from "../utils/request.util.js";
 import {
     getAllSubscriptionPaymentsService,
@@ -64,18 +62,8 @@ export const getSubscriptionPayments =
         try {
 
             const subscriptionId = req.params.id;
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { subscriptionPayments, total } = await getSubscriptionPaymentsService(
                 skip,
@@ -119,21 +107,11 @@ export const getSubscriptionByPaymentId =
     }
 
 export const getAllSubscriptionPayments =
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (_: Request, res: Response, next: NextFunction) => {
         try {
 
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { subscriptionPayments, total } = await getAllSubscriptionPaymentsService(
                 skip,

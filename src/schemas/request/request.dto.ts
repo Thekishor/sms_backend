@@ -318,7 +318,7 @@ export const courseSchema = z.object({
             example: "45"
         }),
     description: descriptionField.openapi({
-        example: "Full stack developer with html, css, js and node js",
+        example: "Full stack development",
     })
 })
 
@@ -459,7 +459,7 @@ export const subscriptionPaymentSchema = z.object({
 
 export const paginationSchema = z.object({
     page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(10).default(10),
+    limit: z.coerce.number().int().min(1).max(100).default(10),
     search: z.string().trim().default(""),
     sortBy: z.string().default("createdAt"),
     sortOrder: z.enum(["asc", "desc"]).default("desc"),

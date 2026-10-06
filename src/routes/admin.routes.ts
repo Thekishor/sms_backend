@@ -27,13 +27,14 @@ import {
 } from "../controller/subscription.controller.js";
 import { createRateLimiters } from "../config/rate-limiter.js";
 import { requireSubscription } from "../middlewares/subscription.middleware.js";
-import { validateParams, validateRequest } from "../middlewares/validate.middleware.js";
+import { validateParams, validateQuery, validateRequest } from "../middlewares/validate.middleware.js";
 import {
     changePasswordSchema,
     changeStaffPasswordSchema,
     companySchema,
     createAdminSchema,
     otpVerificationSchema,
+    paginationSchema,
     paramsSchema,
     resendOtpSchema,
     resetPasswordSchema,
@@ -98,7 +99,7 @@ export function adminRoutes(rateLimiters: ReturnType<typeof createRateLimiters>)
 
     /* company */
     router.post("/companies", verifyToken, validateRequest(companySchema), createCompany);
-    router.get("/companies", verifyToken, getAllCompaniesByAdmin);
+    router.get("/companies", verifyToken, validateQuery(paginationSchema), getAllCompaniesByAdmin);
     router.get("/companies/:id", verifyToken, getCompany);
 
     // update company
@@ -135,6 +136,7 @@ export function adminRoutes(rateLimiters: ReturnType<typeof createRateLimiters>)
         verifyToken,
         requireCompany,
         requireSubscription,
+        validateQuery(paginationSchema),
         getAllStaff
     );
 

@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { batchSchema, paginationSchema } from "../schemas/request/request.dto.js";
-import { z } from "zod";
+import { PaginationQuery } from "../schemas/request/request.dto.js";
 import {
     createBatchService,
     deleteBatchService,
@@ -11,7 +10,6 @@ import {
 } from "../service/batch.service.js";
 import { parseQuery } from "../utils/query.util.js";
 import { logError } from "../config/logger.js";
-import AppError from "../utils/AppError.js";
 import { requireCompanyId } from "../utils/request.util.js";
 
 export const createBatch =
@@ -19,18 +17,8 @@ export const createBatch =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = batchSchema.safeParse(req.body);
 
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { batch } = await createBatchService(result.data, companyId);
+            const { batch } = await createBatchService(req.body, companyId);
 
             return res.status(200).json({
                 message: "Batch created successfully",
@@ -68,18 +56,8 @@ export const getAllBatches =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { batches, total } = await getBatches(
                 companyId,
@@ -105,18 +83,8 @@ export const getAllBatchesWithStudents =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { batches, total } = await getBatchesWithStudents(
                 companyId,
@@ -163,18 +131,8 @@ export const updateBatch =
 
             const companyId = requireCompanyId(req);
             const batchId = req.params.id;
-            const result = batchSchema.safeParse(req.body);
 
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { batch } = await updateBatchService(companyId, batchId, result.data);
+            const { batch } = await updateBatchService(companyId, batchId, req.body);
 
             return res.status(200).json({
                 message: "Batch updated successfully",

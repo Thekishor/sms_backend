@@ -34,8 +34,8 @@ import {
     updateAllNotificationsReadStatus,
     updateNotificationReadStatus
 } from "../controller/notification.controller.js";
-import { validateParams, validateRequest } from "../middlewares/validate.middleware.js";
-import { paramsSchema, subscriptionPaymentSchema } from "../schemas/request/request.dto.js";
+import { validateParams, validateQuery, validateRequest } from "../middlewares/validate.middleware.js";
+import { paginationSchema, paramsSchema, subscriptionPaymentSchema } from "../schemas/request/request.dto.js";
 
 const router = Router();
 
@@ -50,7 +50,7 @@ router.get("/me", verifySuperAdminToken, getMeSuperAdmin);
 /* admins*/
 
 // get all admin by super admin
-router.get("/admins", verifySuperAdminToken, getAllAdmins);
+router.get("/admins", verifySuperAdminToken, validateQuery(paginationSchema), getAllAdmins);
 
 // get specific admin by id
 router.get("/admins/:id", verifySuperAdminToken, validateParams(paramsSchema), getAdminById);
@@ -72,7 +72,7 @@ router.patch(
 /* companies */
 
 // get all companies
-router.get("/companies", verifySuperAdminToken, getAllCompaniesBySuperAdmin);
+router.get("/companies", verifySuperAdminToken, validateQuery(paginationSchema), getAllCompaniesBySuperAdmin);
 
 // change or update company status
 router.patch(
@@ -85,7 +85,7 @@ router.patch(
 /* companies subscription */
 
 // get all subscription by super admin
-router.get("/subscriptions", verifySuperAdminToken, getAllSubscriptions);
+router.get("/subscriptions", verifySuperAdminToken, validateQuery(paginationSchema), getAllSubscriptions);
 
 // send subscription reminder mail to company by super admin
 router.post(
@@ -100,6 +100,7 @@ router.get(
     "/companies/:id/subscriptions",
     verifySuperAdminToken,
     validateParams(paramsSchema),
+    validateQuery(paginationSchema),
     getCompanySubscriptions
 );
 
@@ -108,6 +109,7 @@ router.get(
     "/companies/:id/subscriptions/active",
     verifySuperAdminToken,
     validateParams(paramsSchema),
+    validateQuery(paginationSchema),
     getActiveCompanySubscriptions
 );
 
@@ -143,6 +145,7 @@ router.get(
     "/subscriptions/:id/payments",
     verifySuperAdminToken,
     validateParams(paramsSchema),
+    validateQuery(paginationSchema),
     getSubscriptionPayments
 );
 
@@ -155,7 +158,7 @@ router.get(
 );
 
 // get all subscription related payments
-router.get("/subscriptions/payments", verifySuperAdminToken, getAllSubscriptionPayments);
+router.get("/subscriptions/payments", verifySuperAdminToken, validateQuery(paginationSchema), getAllSubscriptionPayments);
 
 /* notifications */
 router.get("/notifications", verifySuperAdminToken, getNotifications);

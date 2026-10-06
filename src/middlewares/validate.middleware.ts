@@ -20,6 +20,26 @@ export const validateRequest = <T extends z.ZodType>(schema: T) =>
         return next();
     }
 
+export const validateQuery = <T extends z.ZodType>(schema: T) =>
+    (req: Request, res: Response, next: NextFunction) => {
+
+        const result = schema.safeParse(req.query);
+
+        if (!result.success) {
+            return next(
+                new AppError(
+                    "Validation failed",
+                    400,
+                    "VALIDATION_ERROR",
+                    z.flattenError(result.error).fieldErrors
+                )
+            );
+        }
+
+        res.locals.query = result.data;
+        return next();
+    }
+
 export const validateParams = <T extends z.ZodTypeAny>(schema: T) =>
     (req: Request, _: Response, next: NextFunction) => {
 
