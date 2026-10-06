@@ -97,6 +97,11 @@ export const deleteStaffService =
             where: { id: staff.id }
         });
 
+        // also delete all sessions for this staff
+        await prisma.session.deleteMany({
+            where: { userId: staff.id }
+        });
+
         // del from redis
         await redisOperation.del(`company:${companyId}:staffs:*`);
     }
@@ -247,6 +252,11 @@ export const changePasswordForStaffService =
         await prisma.staff.update({
             where: { id: staff.id },
             data: { password: passwordHash }
+        });
+
+        // remove all sessions for this staff
+        await prisma.session.deleteMany({
+            where: { userId: staff.id, revoked: false }
         });
     }
 

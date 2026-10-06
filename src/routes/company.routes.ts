@@ -8,7 +8,6 @@ import {
     changedStudentStatus,
     createStudent, deleteStudentById,
     getAllStudents,
-    getAllStudentsWithPayments,
     getStudentById, getStudentFeeAccount,
     getStudentWithPayments, updateStudentById
 } from "../controller/student.controller.js";
@@ -65,22 +64,14 @@ import {
 } from "../controller/stock-history.controller.js";
 import { requireSubscription } from "../middlewares/subscription.middleware.js";
 import { createRateLimiters } from "../config/rate-limiter.js";
+import { validateParams, validateRequest } from "../middlewares/validate.middleware.js";
+import { paramsSchema, studentSchema, studentUpdateSchema } from "../schemas/request/request.dto.js";
 
 export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters>) {
-    
+
     const router = Router();
 
     /* students routes */
-
-    // get all students with payments
-    router.get("/students/payments",
-        verifyToken,
-        roleMiddleware([Role.MANAGER, Role.RECEPTIONIST, Role.ACCOUNTANT]),
-        permissionMiddleware([PERMISSIONS.SMS]),
-        requireCompany,
-        requireSubscription,
-        getAllStudentsWithPayments
-    );
 
     // create student
     router.post("/students",
@@ -89,6 +80,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateRequest(studentSchema),
         createStudent
     );
 
@@ -109,6 +101,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
         getStudentWithPayments
     );
 
@@ -119,6 +112,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
         changedStudentStatus
     );
 
@@ -129,6 +123,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
         getStudentFeeAccount
     );
 
@@ -139,6 +134,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
         getStudentById
     );
 
@@ -149,6 +145,8 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
+        validateRequest(studentUpdateSchema),
         updateStudentById
     );
 
@@ -159,6 +157,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.SMS]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
         deleteStudentById
     );
 

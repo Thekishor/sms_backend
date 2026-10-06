@@ -1,12 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { paginationSchema, studentSchema, studentUpdateSchema } from "../schemas/request/request.dto.js";
+import { paginationSchema } from "../schemas/request/request.dto.js";
 import { z } from "zod";
 import {
     changedStatus,
     createStudentService, deleteStudent, getFeeAccountService,
     getStudent, getStudentPayments,
-    getStudents,
-    getStudentsWithPayments, updateStudent
+    getStudents, updateStudent
 } from "../service/student.service.js";
 import { parseQuery } from "../utils/query.util.js";
 import { logError } from "../config/logger.js";
@@ -18,18 +17,8 @@ export const createStudent =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = studentSchema.safeParse(req.body);
 
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { student } = await createStudentService(result.data, companyId);
+            const { student } = await createStudentService(req.body, companyId);
 
             return res.status(200).json({
                 message: "Student created successfully",
@@ -119,43 +108,6 @@ export const getStudentWithPayments =
         }
     }
 
-export const getAllStudentsWithPayments =
-    async (req: Request, res: Response, next: NextFunction) => {
-        try {
-
-            const companyId = requireCompanyId(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
-
-            const { students, total } = await getStudentsWithPayments(
-                companyId,
-                skip,
-                take,
-                search,
-                orderBy
-            );
-
-            return res.status(200).json({
-                message: "Students retrieved with payments successfully",
-                students, total
-            });
-
-        } catch (err) {
-            logError("Failed to get students with payments", err);
-            return next(err);
-        }
-    }
-
 export const getStudentFeeAccount =
     async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -183,18 +135,7 @@ export const updateStudentById =
             const companyId = requireCompanyId(req);
             const studentId = req.params.id;
 
-            const result = studentUpdateSchema.safeParse(req.body);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { student } = await updateStudent(studentId, result.data, companyId);
+            const { student } = await updateStudent(studentId, req.body, companyId);
 
             return res.status(200).json({
                 message: "Student updated successfully",

@@ -5,7 +5,6 @@ import { Prisma, Status } from "@prisma/client";
 import {
     StudentResponseDto,
     StudentsResponseDto,
-    StudentsWithPaymentsResponseDto,
     StudentWithFeeAccountResponseDto,
     StudentWithPaymentsResponseDto,
 } from "../schemas/response/response.dto.js";
@@ -42,7 +41,7 @@ export const createStudentService =
 
         if (existsStudent) {
 
-            if (existsStudent.email === email && existsStudent.status === Status.ACTIVE) {
+            if (existsStudent.email === email) {
                 throw new AppError(
                     "Student already exists with this email",
                     409,
@@ -50,7 +49,7 @@ export const createStudentService =
                 );
             }
 
-            if (existsStudent.phone === phone && existsStudent.status === Status.ACTIVE) {
+            if (existsStudent.phone === phone) {
                 throw new AppError(
                     "Student already exists with this phone number",
                     409,
@@ -79,7 +78,7 @@ export const createStudentService =
                 courseId,
                 companyId,
             }
-        })
+        });
 
         // del from redis
         await redisOperation.del(`company:${companyId}:students:*`);
@@ -168,92 +167,6 @@ export const getStudent =
         return {
             student: mapStudent(student)
         };
-    }
-
-export const getStudentsWithPayments =
-    async (
-        companyId: string,
-        skip: number,
-        take: number,
-        search: string,
-        orderBy: Record<string, "asc" | "desc">,
-    ): Promise<{
-        students: StudentsWithPaymentsResponseDto["students"];
-        total: number;
-    }> => {
-
-        const key = `company:${companyId}:students:payments:${skip}:${take}:${search}:${JSON.stringify(orderBy)}`;
-        const cached = await redisOperation.get(key);
-
-        if (cached) {
-            return JSON.parse(cached);
-        }
-
-        const where: Prisma.StudentWhereInput = {
-            companyId,
-            ...(search && {
-                OR: [
-                    { fullName: { contains: search, mode: "insensitive" } },
-                    { email: { contains: search, mode: "insensitive" } }
-                ]
-            })
-        }
-
-        const [students, total] = await Promise.all([
-            prisma.student.findMany({
-                where,
-                orderBy,
-                skip,
-                take,
-                select: {
-                    id: true,
-                    fullName: true,
-                    email: true,
-                    phone: true,
-                    address: true,
-                    guardianName: true,
-                    guardianPhone: true,
-                    joiningDate: true,
-                    status: true,
-                    batchId: true,
-                    courseId: true,
-                    createdAt: true,
-                    updatedAt: true,
-                    companyId: true,
-                    payments: {
-                        select: {
-                            id: true,
-                            amount: true,
-                            date: true,
-                            description: true,
-                            studentId: true,
-                            createdAt: true,
-                            updatedAt: true,
-                            companyId: true
-                        }
-                    }
-                }
-            }),
-            prisma.student.count({ where })
-        ]);
-
-        if (students.length === 0) {
-            return { students: [], total: 0 };
-        }
-
-        const studentData = students.map(student => ({
-            ...mapStudent(student),
-            payments: student.payments.map(payment => mapPayment(payment))
-        }));
-
-        // set to redis
-        await redisOperation.setEx(
-            key,
-            600,
-            JSON.stringify({ students, total })
-        );
-
-        return { students: studentData, total };
     }
 
 export const getStudentPayments =
