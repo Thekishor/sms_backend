@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { z } from "zod";
-import { paginationSchema, paymentSchema } from "../schemas/request/request.dto.js";
+import { PaginationQuery } from "../schemas/request/request.dto.js";
 import {
     createPayment,
     getPayment,
@@ -8,7 +7,6 @@ import {
 } from "../service/payment.service.js";
 import { parseQuery } from "../utils/query.util.js";
 import { logError } from '../config/logger.js';
-import AppError from "../utils/AppError.js";
 import { requireCompanyId } from "../utils/request.util.js";
 
 export const createPaymentOfStudent =
@@ -16,18 +14,7 @@ export const createPaymentOfStudent =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = paymentSchema.safeParse(req.body);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { payment } = await createPayment(companyId, result.data);
+            const { payment } = await createPayment(companyId, req.body);
 
             return res.status(200).send({
                 message: "Payment generated successfully",
@@ -65,18 +52,8 @@ export const getAllPayments =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { payments, total } = await getPayments(
                 companyId,

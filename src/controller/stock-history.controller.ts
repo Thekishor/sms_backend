@@ -3,9 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { getStockHistories, getStockHistoryById } from "../service/stock-history.service.js";
 import { parseQuery } from "../utils/query.util.js";
 import { requireCompanyId } from "../utils/request.util.js";
-import { z } from "zod";
-import { paginationSchema } from "../schemas/request/request.dto.js";
-import AppError from "../utils/AppError.js";
+import { PaginationQuery } from "../schemas/request/request.dto.js";
 
 export const getStockHistory =
     async (req: Request, res: Response, next: NextFunction) => {
@@ -32,18 +30,8 @@ export const getAllStockHistory =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { stockHistories, total } = await getStockHistories(
                 companyId,

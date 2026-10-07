@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { feeAccountSchema, paginationSchema } from "../schemas/request/request.dto.js";
-import { z } from "zod";
+import { PaginationQuery } from "../schemas/request/request.dto.js";
 import {
     createFeeAccount,
     getFeeAccount,
@@ -8,7 +7,6 @@ import {
 } from "../service/fee-account.service.js";
 import { parseQuery } from "../utils/query.util.js";
 import { logError } from '../config/logger.js';
-import AppError from '../utils/AppError.js';
 import { requireCompanyId } from '../utils/request.util.js';
 
 export const createFeeForStudent =
@@ -16,18 +14,7 @@ export const createFeeForStudent =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = feeAccountSchema.safeParse(req.body);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { feeAccount } = await createFeeAccount(companyId, result.data);
+            const { feeAccount } = await createFeeAccount(companyId, req.body);
 
             return res.status(200).send({
                 message: "FeeAccount created successfully",
@@ -45,12 +32,12 @@ export const getFeeAccountById =
         try {
 
             const companyId = requireCompanyId(req);
-            const feeAccountId = req.body.id;
+            const feeAccountId = req.params.id;
 
             const { feeAccount } = await getFeeAccount(companyId, feeAccountId);
 
             return res.status(200).send({
-                message: "FeeAccount retrieved successfully",
+                message: "Fee account retrieved successfully",
                 feeAccount
             });
 
@@ -65,18 +52,8 @@ export const getAllFeeAccounts =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { feeAccounts, total } = await getFeeAccounts(
                 companyId,
@@ -87,7 +64,7 @@ export const getAllFeeAccounts =
             );
 
             return res.status(200).send({
-                message: "FeeAccounts retrieved successfully",
+                message: "Fee accounts retrieved successfully",
                 feeAccounts, total,
             });
 

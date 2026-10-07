@@ -1,11 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import {
-    inventorySchema,
-    paginationSchema,
-    purchaseStockSchema,
-    stockOutSchema,
+    PaginationQuery
 } from "../schemas/request/request.dto.js";
-import { z } from "zod";
 import {
     createInventoryService,
     deleteInventory,
@@ -20,7 +16,6 @@ import {
 } from "../service/inventory.service.js";
 import { parseQuery } from "../utils/query.util.js";
 import { logError } from '../config/logger.js';
-import AppError from '../utils/AppError.js';
 import { requireCompanyId, requireUser } from '../utils/request.util.js';
 
 export const createInventory =
@@ -29,19 +24,7 @@ export const createInventory =
 
             const companyId = requireCompanyId(req);
             const createdBy = requireUser(req);
-
-            const result = inventorySchema.safeParse(req.body);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { inventory } = await createInventoryService(companyId, createdBy, result.data);
+            const { inventory } = await createInventoryService(companyId, createdBy, req.body);
 
             return res.status(201).json({
                 message: 'Inventory created successfully.',
@@ -79,18 +62,8 @@ export const getAllInventories =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { inventories, total } = await getInventories(
                 companyId,
@@ -117,18 +90,7 @@ export const updateInventoryById =
 
             const companyId = requireCompanyId(req);
             const inventoryId = req.params.id;
-            const result = inventorySchema.safeParse(req.body);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { inventory } = await updateInventory(companyId, inventoryId, result.data);
+            const { inventory } = await updateInventory(companyId, inventoryId, req.body);
 
             return res.status(200).json({
                 message: 'Inventory updated successfully.',
@@ -168,19 +130,8 @@ export const purchaseInventory =
             const inventoryId = req.params.id;
             const createdBy = requireUser(req);
 
-            const result = purchaseStockSchema.safeParse(req.body);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
             const { purchaseInventory } = await purchaseInventoryService(
-                result.data,
+                req.body,
                 companyId,
                 createdBy,
                 inventoryId
@@ -205,19 +156,8 @@ export const issueInventory =
             const inventoryId = req.params.id;
             const createdBy = requireUser(req);
 
-            const result = stockOutSchema.safeParse(req.body);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
             const { issueInventory } = await issueInventoryService(
-                result.data,
+                req.body,
                 companyId,
                 createdBy,
                 inventoryId
@@ -240,19 +180,9 @@ export const getInventoryStockHistory =
 
             const companyId = requireCompanyId(req);
             const inventoryId = req.params.id;
+            const query = res.locals.query as PaginationQuery;
 
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { stockHistories, total } = await getStockHistoryService(
                 companyId,

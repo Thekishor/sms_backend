@@ -178,7 +178,12 @@ export const deleteInventory =
     }
 
 export const purchaseInventoryService =
-    async (data: PurchaseStockDto, companyId: string, createdBy: string, inventoryId: string): Promise<{
+    async (
+        data: PurchaseStockDto,
+        companyId: string,
+        createdBy: string,
+        inventoryId: string
+    ): Promise<{
         purchaseInventory: PurchaseInventoryDto["purchaseInventory"];
     }> => {
 
@@ -255,7 +260,12 @@ export const purchaseInventoryService =
     }
 
 export const issueInventoryService =
-    async (data: StockOutDto, companyId: string, createdBy: string, inventoryId: string): Promise<{
+    async (
+        data: StockOutDto,
+        companyId: string,
+        createdBy: string,
+        inventoryId: string
+    ): Promise<{
         issueInventory: IssueInventoryDto["issueInventory"]
     }> => {
 
@@ -482,7 +492,9 @@ export const getStockAlertsService =
 
                 // already expired
                 expired: batches.filter(batch =>
-                    batch.expiryDate && batch.expiryDate < today && batch.remainingQty > 0
+                    batch.expiryDate &&
+                    batch.expiryDate < today &&
+                    batch.remainingQty > 0
                 ).map(batch => ({
                     ...batch,
                     expiryDate: batch.expiryDate ? batch.expiryDate.toISOString() : "",
