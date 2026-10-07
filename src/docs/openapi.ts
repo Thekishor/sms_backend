@@ -2099,7 +2099,7 @@ registry.registerPath({
             description: "Course deleted successfully",
             content: {
                 "application/json": {
-                    schema: courseResponseSchema
+                    schema: messageResponseSchema
                 }
             }
         },

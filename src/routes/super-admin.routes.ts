@@ -149,7 +149,7 @@ router.get(
     getSubscriptionPayments
 );
 
-// get subscription payment by payment id
+// get company subscription payment by id
 router.get(
     "/subscriptions/payments/:id",
     verifySuperAdminToken,

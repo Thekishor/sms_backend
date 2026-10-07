@@ -56,7 +56,7 @@ export function adminRoutes(rateLimiters: ReturnType<typeof createRateLimiters>)
         registerAdmin
     );
 
-    // verify admin by otp and email field 
+    // verify account by admin with otp
     router.post(
         "/auth/verify-email",
         validateRequest(otpVerificationSchema),
@@ -100,7 +100,7 @@ export function adminRoutes(rateLimiters: ReturnType<typeof createRateLimiters>)
     /* company */
     router.post("/companies", verifyToken, validateRequest(companySchema), createCompany);
     router.get("/companies", verifyToken, validateQuery(paginationSchema), getAllCompaniesByAdmin);
-    router.get("/companies/:id", verifyToken, getCompany);
+    router.get("/companies/:id", verifyToken, validateParams(paramsSchema), getCompany);
 
     // update company
     router.patch(
@@ -115,7 +115,10 @@ export function adminRoutes(rateLimiters: ReturnType<typeof createRateLimiters>)
     router.delete("/companies/:id", verifyToken, validateParams(paramsSchema), deleteCompany);
 
     /* company subscriptions (admin) */
+
+    // get active company subscription by admin
     router.get("/companies/:id/subscription", verifyToken, getActiveCompanySubscriptionByAdmin);
+    // cancel trial subscription by admin
     router.patch("/companies/:id/subscription/cancel-trial", verifyToken, cancelTrialSubscription);
 
     /* staff */
