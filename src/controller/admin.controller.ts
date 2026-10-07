@@ -50,7 +50,6 @@ export const resendOtpForAdmin =
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { email, type } = req.body;
-
             await resendOtp(email, type);
 
             return res.status(200).send({
@@ -163,7 +162,6 @@ export const deleteAdminById =
 
             const superAdminId = requireSuperAdmin(req);
             const adminId = req.params.id;
-
             await deleteAdmin(adminId, superAdminId);
 
             return res.status(200).json({
@@ -201,7 +199,6 @@ export const getCompaniesWithAdmin =
             // only validate
             requireSuperAdmin(req);
             const adminId = req.params.id;
-
             const { admin } = await getAllCompaniesWithAdminService(adminId);
 
             return res.status(200).json({

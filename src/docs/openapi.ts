@@ -1,55 +1,74 @@
 import {
     OpenAPIRegistry,
-    OpenApiGeneratorV3
+    OpenApiGeneratorV3,
+    extendZodWithOpenApi
 } from "@asteasolutions/zod-to-openapi";
-import { z } from 'zod';
+import { z } from "zod";
 import {
     createAdminSchema,
     loginSchema,
     otpVerificationSchema,
     resendOtpSchema,
     resetPasswordSchema,
-    changePasswordSchema, updateAdminSchema,
-    staffSchema, updateStaffSchema, studentSchema,
-    studentUpdateSchema, inventorySchema,
-    feeAccountSchema, courseSchema, batchSchema,
-    paymentSchema, companySchema,
+    changePasswordSchema,
+    changeStaffPasswordSchema,
+    updateAdminSchema,
+    staffSchema,
+    updateStaffSchema,
+    studentSchema,
+    studentUpdateSchema,
+    inventorySchema,
+    feeAccountSchema,
+    courseSchema,
+    batchSchema,
+    paymentSchema,
+    companySchema,
     supplierSchema,
     stockOutSchema,
     purchaseStockSchema,
-    subscriptionSchema,
     subscriptionPaymentSchema
 } from "../schemas/request/request.dto.js";
 import {
     adminLoginResponseSchema,
     adminResponseSchema,
-    adminsResponseSchema, adminWithCompaniesResponseSchema,
+    adminsResponseSchema,
+    adminWithCompaniesResponseSchema,
     batchesResponseSchema,
-    batchesWithStudentsResponseSchema, batchResponseSchema,
+    batchesWithStudentsResponseSchema,
+    batchResponseSchema,
     companiesResponseSchema,
     companyResponseSchema,
     courseResponseSchema,
     coursesResponseSchema,
-    coursesWithStudentsResponseSchema, feeAccountResponseSchema,
-    feeAccountsResponseSchema, inventoriesResponseSchema,
-    inventoryResponseSchema, issueInventorySchema,
-    paymentResponseSchema, paymentsResponseSchema,
-    purchaseInventorySchema, staffResponseSchema,
+    feeAccountResponseSchema,
+    feeAccountsResponseSchema,
+    inventoriesResponseSchema,
+    inventoryResponseSchema,
+    paymentResponseSchema,
+    paymentsResponseSchema,
+    purchaseInventorySchema,
+    staffResponseSchema,
     staffsResponseSchema,
     stockAlertsSchema,
     stockHistoriesResponse,
     stockHistoryResponse,
+    stockHistorySchema,
     stockSummarySchema,
-    studentResponseSchema, studentsResponseSchema,
-    studentsWithPaymentsSchema,
+    studentResponseSchema,
+    studentsResponseSchema,
     studentWithFeeAccountSchema,
-    studentWithPaymentsSchema, subscriptionPaymentResponseSchema,
-    subscriptionPaymentsResponseSchema, subscriptionResponseSchema,
-    subscriptionsResponseSchema, superAdminResponseSchema,
+    studentWithPaymentsSchema,
+    subscriptionPaymentResponseSchema,
+    subscriptionPaymentsResponseSchema,
+    subscriptionResponseSchema,
+    subscriptionsResponseSchema,
+    superAdminResponseSchema,
     supplierResponseSchema,
     suppliersResponseSchema
 } from "../schemas/response/response.dto.js";
-import { Status } from "@prisma/client";
+import { Status, OtpType } from "@prisma/client";
+
+extendZodWithOpenApi(z);
 
 const registry = new OpenAPIRegistry();
 
@@ -57,10 +76,17 @@ const idParamSchema = z.object({
     id: z.string().openapi({
         example: "01f0e55c3-c3d8-762a-bfc2-bd11bc99a48d"
     }),
-})
+});
 
 const companyIdSchema = z.object({
     id: z.string().openapi({
+        example: "019ec407-11a0-70d4-b558-5c7ec9a218d0"
+    })
+});
+
+const companyHeaderSchema = z.object({
+    "x-company-id": z.string().openapi({
+        description: "Company ID header (required for Admin, optional for Staff)",
         example: "019ec407-11a0-70d4-b558-5c7ec9a218d0"
     })
 });
@@ -79,8 +105,101 @@ const subscriptionPaymentIdSchema = z.object({
 
 const statusSchema = z.object({
     status: z.enum(Status).openapi({
-        example: "ACTIVE or INACTIVE or REJECTED"
+        example: "ACTIVE"
     }),
+});
+
+const messageResponseSchema = z.object({
+    message: z.string().openapi({
+        example: "Operation completed successfully"
+    })
+});
+
+const resendOtpResponseSchema = z.object({
+    message: z.string().openapi({
+        example: "OTP resent successfully. Please check your email."
+    }),
+    email: z.string().openapi({
+        example: "kishorpandey981@gmail.com"
+    }),
+    type: z.enum(OtpType).openapi({
+        example: "EMAIL_VERIFICATION"
+    })
+});
+
+const forgotPasswordBodySchema = z.object({
+    email: z.string().openapi({
+        example: "kishorpandey981@gmail.com"
+    })
+});
+
+const forgotPasswordResponseSchema = z.object({
+    message: z.string().openapi({
+        example: "Password reset OTP sent successfully. Please check your email."
+    }),
+    email: z.string().openapi({
+        example: "kishorpandey981@gmail.com"
+    })
+});
+
+const deductionItemSchema = z.object({
+    batchId: z.string().openapi({
+        example: "019ec407-11a0-70d4-b558-5c7ec9a218d0"
+    }),
+    deduct: z.number().openapi({
+        example: 5
+    })
+});
+
+const issueInventoryResponseSchema = z.object({
+    message: z.string().openapi({
+        example: "Stock issued successfully."
+    }),
+    issueInventory: z.object({
+        inventory: inventorySchema,
+        deductions: z.array(deductionItemSchema),
+        stockHistories: z.array(stockHistorySchema)
+    })
+});
+
+const notificationSchema = z.object({
+    id: z.string().openapi({
+        example: "notif_019ec40711a0"
+    }),
+    recipientId: z.string().openapi({
+        example: "01f0e55c3-c3d8-762a-bfc2-bd11bc99a48d"
+    }),
+    title: z.string().openapi({
+        example: "New Admin Registration"
+    }),
+    message: z.string().openapi({
+        example: "A new admin account has been registered."
+    }),
+    isRead: z.boolean().openapi({
+        example: false
+    }),
+    readAt: z.date().nullable().openapi({
+        example: null
+    }),
+    createdAt: z.date(),
+    updatedAt: z.date()
+});
+
+const notificationsResponseSchema = z.object({
+    message: z.string().openapi({
+        example: "Notifications retrieved successfully"
+    }),
+    notifications: z.array(notificationSchema),
+    total: z.number().openapi({
+        example: 1
+    })
+});
+
+const notificationResponseSchema = z.object({
+    message: z.string().openapi({
+        example: "Notification marked as read successfully"
+    }),
+    notification: notificationSchema
 });
 
 registry.registerComponent("securitySchemes", "bearerAuth", {
@@ -89,13 +208,14 @@ registry.registerComponent("securitySchemes", "bearerAuth", {
     bearerFormat: "JWT"
 });
 
-/*swagger open api (zod) docs for sms backend application*/
+/* ========================================================================== */
+/*                             AUTH ROUTES                                    */
+/* ========================================================================== */
 
-// login all 
+// login superadmin, admin and staff
 registry.registerPath({
     method: "post",
     path: "/api/v1/auth/login",
-
     tags: ["Auth Routes"],
     summary: "Login SuperAdmin, Admin and Staff",
     description: "Authenticate user (super admin, admin, or staff) and return a JWT token.",
@@ -124,9 +244,8 @@ registry.registerPath({
 registry.registerPath({
     method: "post",
     path: "/api/v1/auth/refresh-token",
-
     tags: ["Auth Routes"],
-    summary: "Refresh Token for Admin or Staff ",
+    summary: "Refresh Token for Admin or Staff",
     description: "Generate new access and refresh tokens for an authenticated admin or staff.",
     responses: {
         200: {
@@ -153,12 +272,7 @@ registry.registerPath({
             description: "Logged out successfully",
             content: {
                 "application/json": {
-                    schema: {
-                        type: "object",
-                        properties: {
-                            message: { type: "string", example: "Logged out successfully" }
-                        }
-                    }
+                    schema: messageResponseSchema
                 }
             }
         }
@@ -178,12 +292,7 @@ registry.registerPath({
             description: "Logged out from all devices successfully",
             content: {
                 "application/json": {
-                    schema: {
-                        type: "object",
-                        properties: {
-                            message: { type: "string", example: "Logged out from all devices successfully" }
-                        }
-                    }
+                    schema: messageResponseSchema
                 }
             }
         }
@@ -196,7 +305,7 @@ registry.registerPath({
     path: "/api/v1/auth/me",
     tags: ["Auth Routes"],
     summary: "Get Authenticated Admin or Staff Details",
-    description: "Retrieved the details of the authenticated admin or staff.",
+    description: "Retrieve the details of the authenticated admin or staff.",
     security: [{ bearerAuth: [] }],
     responses: {
         200: {
@@ -209,6 +318,10 @@ registry.registerPath({
         }
     }
 });
+
+/* ========================================================================== */
+/*                          SUPER ADMIN ROUTES                                */
+/* ========================================================================== */
 
 // get me super admin
 registry.registerPath({
@@ -241,6 +354,11 @@ registry.registerPath({
     responses: {
         200: {
             description: "Super admin logged out successfully",
+            content: {
+                "application/json": {
+                    schema: messageResponseSchema
+                }
+            }
         }
     }
 });
@@ -259,17 +377,22 @@ registry.registerPath({
     responses: {
         200: {
             description: "Admin deleted successfully",
+            content: {
+                "application/json": {
+                    schema: adminResponseSchema
+                }
+            }
         },
     },
 });
 
-// get admin by super admin
+// get specific admin by id
 registry.registerPath({
     method: "get",
     path: "/api/v1/super-admin/admins/{id}",
     tags: ["Super Admin Routes"],
-    summary: "Get Authenticated Admin Details",
-    description: "Retrieved the details of the authenticated admin.",
+    summary: "Get Admin Details By ID",
+    description: "Retrieve details of a specific admin by ID.",
     security: [{ bearerAuth: [] }],
     request: {
         params: idParamSchema,
@@ -284,10 +407,9 @@ registry.registerPath({
             }
         }
     }
-}
-);
+});
 
-// changes admin status by super admin
+// change admin status by super admin
 registry.registerPath({
     method: "patch",
     path: "/api/v1/super-admin/admins/{id}/status",
@@ -310,13 +432,12 @@ registry.registerPath({
             description: "Admin status changed successfully",
             content: {
                 "application/json": {
-                    schema: adminsResponseSchema,
+                    schema: adminResponseSchema,
                 },
             },
         },
     },
 });
-
 
 // get all admins by super admin
 registry.registerPath({
@@ -361,7 +482,7 @@ registry.registerPath({
     },
 });
 
-// get all companies
+// get all companies by super admin
 registry.registerPath({
     method: "get",
     path: "/api/v1/super-admin/companies",
@@ -380,7 +501,6 @@ registry.registerPath({
         },
     },
 });
-
 
 // change company status by super admin
 registry.registerPath({
@@ -412,55 +532,30 @@ registry.registerPath({
     },
 });
 
-// create company subscription
-registry.registerPath({
-    method: "post",
-    path: "/api/v1/super-admin/companies/{id}/subscriptions",
-    tags: ["Super Admin Routes"],
-    summary: "Create Company Subscription",
-    description: "Super admin create company subscription.",
-    security: [{ bearerAuth: [] }],
-    request: {
-        params: companyIdSchema,
-        body: {
-            content: {
-                "application/json": {
-                    schema: subscriptionSchema
-                },
-            },
-        },
-    },
-    responses: {
-        200: {
-            description: "Company subscription created successfully",
-            content: {
-                "application/json": {
-                    schema: subscriptionResponseSchema,
-                },
-            },
-        },
-    },
-});
-
-// /subscriptions/:id/send-reminder
+// send subscription reminder mail
 registry.registerPath({
     method: "post",
     path: "/api/v1/super-admin/subscriptions/{id}/send-reminder",
     tags: ["Super Admin Routes"],
     summary: "Send Subscription Reminder Mail",
-    description: "Super admin send subscription reminder mail to company.",
+    description: "Super admin sends subscription reminder mail to company.",
     security: [{ bearerAuth: [] }],
     request: {
         params: subscriptionIdSchema,
     },
     responses: {
         200: {
-            description: "Subscription reminder mail send successfully",
+            description: "Subscription reminder mail sent successfully",
+            content: {
+                "application/json": {
+                    schema: messageResponseSchema
+                }
+            }
         },
     },
 });
 
-// get companies subscriptions
+// get company subscriptions
 registry.registerPath({
     method: "get",
     path: "/api/v1/super-admin/companies/{id}/subscriptions",
@@ -483,7 +578,7 @@ registry.registerPath({
     },
 });
 
-// get all subscriptions
+// get all subscriptions by super admin
 registry.registerPath({
     method: "get",
     path: "/api/v1/super-admin/subscriptions",
@@ -503,7 +598,7 @@ registry.registerPath({
     },
 });
 
-// get companies active subscriptions
+// get company active subscription
 registry.registerPath({
     method: "get",
     path: "/api/v1/super-admin/companies/{id}/subscriptions/active",
@@ -519,7 +614,7 @@ registry.registerPath({
             description: "Company active subscriptions retrieved successfully",
             content: {
                 "application/json": {
-                    schema: subscriptionsResponseSchema,
+                    schema: subscriptionResponseSchema,
                 },
             },
         },
@@ -532,7 +627,7 @@ registry.registerPath({
     path: "/api/v1/super-admin/subscriptions/{id}/cancel",
     tags: ["Super Admin Routes"],
     summary: "Cancel Company Subscription",
-    description: "Super admin cancel company subscription.",
+    description: "Super admin cancels company subscription.",
     security: [{ bearerAuth: [] }],
     request: {
         params: companyIdSchema,
@@ -555,7 +650,7 @@ registry.registerPath({
     path: "/api/v1/super-admin/subscriptions/{id}/payments",
     tags: ["Super Admin Routes"],
     summary: "Create Company Subscription Payment",
-    description: "Super admin create company subscription payment.",
+    description: "Super admin creates company subscription payment.",
     security: [{ bearerAuth: [] }],
     request: {
         params: subscriptionIdSchema,
@@ -585,7 +680,7 @@ registry.registerPath({
     path: "/api/v1/super-admin/subscriptions/{id}/payments",
     tags: ["Super Admin Routes"],
     summary: "Get Company Subscription Payments",
-    description: "Super admin get company subscription payments.",
+    description: "Super admin gets company subscription payments.",
     security: [{ bearerAuth: [] }],
     request: {
         params: subscriptionIdSchema,
@@ -608,7 +703,7 @@ registry.registerPath({
     path: "/api/v1/super-admin/subscriptions/payments/{id}",
     tags: ["Super Admin Routes"],
     summary: "Get Company Subscription Payment By Id",
-    description: "Super admin get company subscription payment by payment Id.",
+    description: "Super admin gets company subscription payment by payment ID.",
     security: [{ bearerAuth: [] }],
     request: {
         params: subscriptionPaymentIdSchema,
@@ -625,13 +720,13 @@ registry.registerPath({
     },
 });
 
-// get all subscription payments 
+// get all subscription payments
 registry.registerPath({
     method: "get",
     path: "/api/v1/super-admin/subscriptions/payments",
     tags: ["Super Admin Routes"],
     summary: "Get All Company Subscription Payments",
-    description: "Super admin get all company subscription payments",
+    description: "Super admin gets all company subscription payments.",
     security: [{ bearerAuth: [] }],
     responses: {
         200: {
@@ -645,11 +740,77 @@ registry.registerPath({
     },
 });
 
+// get super admin notifications
+registry.registerPath({
+    method: "get",
+    path: "/api/v1/super-admin/notifications",
+    tags: ["Super Admin Routes"],
+    summary: "Get Super Admin Notifications",
+    description: "Retrieve unread notifications for super admin.",
+    security: [{ bearerAuth: [] }],
+    responses: {
+        200: {
+            description: "Notifications retrieved successfully",
+            content: {
+                "application/json": {
+                    schema: notificationsResponseSchema
+                }
+            }
+        }
+    }
+});
+
+// mark all notifications as read for super admin
+registry.registerPath({
+    method: "patch",
+    path: "/api/v1/super-admin/notifications/read-all",
+    tags: ["Super Admin Routes"],
+    summary: "Mark All Notifications as Read",
+    description: "Mark all unread notifications as read for super admin.",
+    security: [{ bearerAuth: [] }],
+    responses: {
+        200: {
+            description: "All notifications marked as read successfully",
+            content: {
+                "application/json": {
+                    schema: messageResponseSchema
+                }
+            }
+        }
+    }
+});
+
+// mark single notification as read for super admin
+registry.registerPath({
+    method: "patch",
+    path: "/api/v1/super-admin/notifications/{id}/read",
+    tags: ["Super Admin Routes"],
+    summary: "Mark Notification as Read",
+    description: "Mark a notification as read by ID for super admin.",
+    security: [{ bearerAuth: [] }],
+    request: {
+        params: idParamSchema
+    },
+    responses: {
+        200: {
+            description: "Notification marked as read successfully",
+            content: {
+                "application/json": {
+                    schema: notificationResponseSchema
+                }
+            }
+        }
+    }
+});
+
+/* ========================================================================== */
+/*                               ADMIN ROUTES                                 */
+/* ========================================================================== */
+
 // admin register endpoint
 registry.registerPath({
     method: "post",
     path: "/api/v1/admins/auth/register",
-
     tags: ["Admin Routes"],
     summary: "Admin Registration",
     description: "Register a new admin account.",
@@ -678,7 +839,6 @@ registry.registerPath({
 registry.registerPath({
     method: "post",
     path: "/api/v1/admins/auth/verify-email",
-
     tags: ["Admin Routes"],
     summary: "Verify Admin Account",
     description: "Verify an admin account using OTP sent to email.",
@@ -703,11 +863,10 @@ registry.registerPath({
     }
 });
 
-// resend otp for admin (expiry = 2min)
+// resend otp for admin
 registry.registerPath({
     method: "post",
     path: "/api/v1/admins/auth/resend-otp",
-
     tags: ["Admin Routes"],
     summary: "Resend OTP for Admin",
     description: "Resend OTP for admin account verification or password reset. OTP will expire in 2 minutes.",
@@ -725,20 +884,12 @@ registry.registerPath({
             description: "OTP resent successfully. Please check your email.",
             content: {
                 "application/json": {
-                    schema: {
-                        type: "object",
-                        properties: {
-                            message: { type: "string", example: "OTP resent successfully. Please check your email." },
-                            email: { type: "string", example: "kishorpandey981@gmail.com" },
-                            type: { type: "string", example: "VERIFY_EMAIL or PASSWORD_RESET" }
-                        }
-                    }
+                    schema: resendOtpResponseSchema
                 }
             }
         }
     }
 });
-
 
 // forgot password for admin
 registry.registerPath({
@@ -751,12 +902,7 @@ registry.registerPath({
         body: {
             content: {
                 "application/json": {
-                    schema: {
-                        type: "object",
-                        properties: {
-                            email: { type: "string", example: "kishorpandey981@gmail.com" }
-                        }
-                    }
+                    schema: forgotPasswordBodySchema
                 }
             }
         }
@@ -766,16 +912,7 @@ registry.registerPath({
             description: "Password reset instructions sent successfully",
             content: {
                 "application/json": {
-                    schema: {
-                        type: "object",
-                        properties: {
-                            message: {
-                                type: "string",
-                                example: "Password reset OTP sent successfully. Please check your email."
-                            },
-                            email: { type: "string", example: "kishorpandey981@gmail.com" }
-                        }
-                    }
+                    schema: forgotPasswordResponseSchema
                 }
             }
         }
@@ -803,19 +940,14 @@ registry.registerPath({
             description: "Password reset successfully",
             content: {
                 "application/json": {
-                    schema: {
-                        type: "object",
-                        properties: {
-                            message: { type: "string", example: "Password reset successfully" }
-                        }
-                    }
+                    schema: messageResponseSchema
                 }
             }
         }
     }
 });
 
-// changed password (auth)
+// change password (auth)
 registry.registerPath({
     method: "post",
     path: "/api/v1/admins/change-password",
@@ -837,12 +969,7 @@ registry.registerPath({
             description: "Password changed successfully",
             content: {
                 "application/json": {
-                    schema: {
-                        type: "object",
-                        properties: {
-                            message: { type: "string", example: "Password changed successfully" }
-                        }
-                    }
+                    schema: messageResponseSchema
                 }
             }
         }
@@ -853,7 +980,6 @@ registry.registerPath({
 registry.registerPath({
     method: "patch",
     path: "/api/v1/admins/{id}",
-
     tags: ["Admin Routes"],
     summary: "Update Admin",
     description: "Update admin information.",
@@ -878,7 +1004,7 @@ registry.registerPath({
             }
         }
     }
-})
+});
 
 // create company
 registry.registerPath({
@@ -909,8 +1035,7 @@ registry.registerPath({
     },
 });
 
-
-// get all companies
+// get all companies by admin
 registry.registerPath({
     method: "get",
     path: "/api/v1/admins/companies",
@@ -929,7 +1054,6 @@ registry.registerPath({
         },
     },
 });
-
 
 // get company by id
 registry.registerPath({
@@ -984,7 +1108,6 @@ registry.registerPath({
     },
 });
 
-
 // delete company
 registry.registerPath({
     method: "delete",
@@ -999,8 +1122,59 @@ registry.registerPath({
     responses: {
         200: {
             description: "Company deleted successfully",
+            content: {
+                "application/json": {
+                    schema: companyResponseSchema
+                }
+            }
         },
     },
+});
+
+// get active company subscription by admin
+registry.registerPath({
+    method: "get",
+    path: "/api/v1/admins/companies/{id}/subscription",
+    tags: ["Admin Routes"],
+    summary: "Get Active Company Subscription",
+    description: "Fetch active subscription for a specific company by admin.",
+    security: [{ bearerAuth: [] }],
+    request: {
+        params: companyIdSchema
+    },
+    responses: {
+        200: {
+            description: "Company subscription retrieved successfully",
+            content: {
+                "application/json": {
+                    schema: subscriptionResponseSchema
+                }
+            }
+        }
+    }
+});
+
+// cancel trial subscription by admin
+registry.registerPath({
+    method: "patch",
+    path: "/api/v1/admins/companies/{id}/subscription/cancel-trial",
+    tags: ["Admin Routes"],
+    summary: "Cancel Trial Subscription",
+    description: "Cancel trial subscription for a company by admin.",
+    security: [{ bearerAuth: [] }],
+    request: {
+        params: companyIdSchema
+    },
+    responses: {
+        200: {
+            description: "Trial subscription cancelled successfully",
+            content: {
+                "application/json": {
+                    schema: subscriptionResponseSchema
+                }
+            }
+        }
+    }
 });
 
 // create staff by admin
@@ -1012,7 +1186,7 @@ registry.registerPath({
     description: "Admin creates a new staff member.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         body: {
             content: {
                 "application/json": {
@@ -1033,7 +1207,6 @@ registry.registerPath({
     },
 });
 
-
 // delete staff by admin
 registry.registerPath({
     method: "delete",
@@ -1043,16 +1216,20 @@ registry.registerPath({
     description: "Admin deletes a staff member by ID.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
         200: {
             description: "Staff deleted successfully",
+            content: {
+                "application/json": {
+                    schema: staffResponseSchema
+                }
+            }
         },
     },
 });
-
 
 // get staff by id
 registry.registerPath({
@@ -1063,7 +1240,7 @@ registry.registerPath({
     description: "Fetch a single staff member by ID.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
@@ -1087,7 +1264,7 @@ registry.registerPath({
     description: "Fetch all staff members.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
     },
     responses: {
         200: {
@@ -1099,7 +1276,7 @@ registry.registerPath({
             },
         },
     },
-})
+});
 
 // change staff status
 registry.registerPath({
@@ -1107,10 +1284,10 @@ registry.registerPath({
     path: "/api/v1/admins/staff/{id}/status",
     tags: ["Admin Routes"],
     summary: "Change Staff Status",
-    description: "Change the status of a staff.",
+    description: "Change the status of a staff member.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
         body: {
             content: {
@@ -1141,7 +1318,7 @@ registry.registerPath({
     description: "Admin updates staff information.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
         body: {
             content: {
@@ -1172,12 +1349,12 @@ registry.registerPath({
     description: "Admin changes password for a staff member.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
         body: {
             content: {
                 "application/json": {
-                    schema: changePasswordSchema
+                    schema: changeStaffPasswordSchema
                 },
             },
         },
@@ -1185,9 +1362,18 @@ registry.registerPath({
     responses: {
         200: {
             description: "Password changed successfully",
+            content: {
+                "application/json": {
+                    schema: messageResponseSchema
+                }
+            }
         },
     },
 });
+
+/* ========================================================================== */
+/*                             COMPANY ROUTES                                 */
+/* ========================================================================== */
 
 // create student
 registry.registerPath({
@@ -1198,7 +1384,7 @@ registry.registerPath({
     description: "Create a new student. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         body: {
             content: {
                 "application/json": {
@@ -1228,7 +1414,7 @@ registry.registerPath({
     description: "Fetch all students. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
     },
     responses: {
         200: {
@@ -1251,7 +1437,7 @@ registry.registerPath({
     description: "Fetch student by ID. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
@@ -1275,7 +1461,7 @@ registry.registerPath({
     description: "Update student information. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
         body: {
             content: {
@@ -1306,7 +1492,7 @@ registry.registerPath({
     description: "Change the status of a student. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
         body: {
             content: {
@@ -1337,35 +1523,17 @@ registry.registerPath({
     description: "Delete student by ID. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
         200: {
             description: "Student deleted successfully",
-        },
-    },
-});
-
-// get all students with payments
-registry.registerPath({
-    method: "get",
-    path: "/api/v1/companies/students/payments",
-    tags: ["Company Routes"],
-    summary: "Get All Students With Payments",
-    description: "Fetch all students with payment history. Admin must provide x-company-id header; staff uses company ID from token.",
-    security: [{ bearerAuth: [] }],
-    request: {
-        headers: companyIdSchema,
-    },
-    responses: {
-        200: {
-            description: "Students fetched with payments successfully",
             content: {
                 "application/json": {
-                    schema: studentsWithPaymentsSchema,
-                },
-            },
+                    schema: studentResponseSchema
+                }
+            }
         },
     },
 });
@@ -1379,12 +1547,12 @@ registry.registerPath({
     description: "Fetch student with payment history. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
         200: {
-            description: "Student fetched with fee account successfully",
+            description: "Student fetched with payment history successfully",
             content: {
                 "application/json": {
                     schema: studentWithPaymentsSchema,
@@ -1393,7 +1561,6 @@ registry.registerPath({
         },
     },
 });
-
 
 // get student with fee account
 registry.registerPath({
@@ -1404,7 +1571,7 @@ registry.registerPath({
     description: "Fetch student fee account details. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
@@ -1428,7 +1595,7 @@ registry.registerPath({
     description: "Create a new inventory item. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         body: {
             content: {
                 "application/json": {
@@ -1449,7 +1616,6 @@ registry.registerPath({
     },
 });
 
-
 // get inventory by id
 registry.registerPath({
     method: "get",
@@ -1459,7 +1625,7 @@ registry.registerPath({
     description: "Fetch inventory by ID. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
@@ -1483,7 +1649,7 @@ registry.registerPath({
     description: "Fetch inventory alerts by admin or staff. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
     },
     responses: {
         200: {
@@ -1506,7 +1672,7 @@ registry.registerPath({
     description: "Fetch inventory summary by admin or staff. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
     },
     responses: {
         200: {
@@ -1520,7 +1686,6 @@ registry.registerPath({
     },
 });
 
-
 // get all inventories
 registry.registerPath({
     method: "get",
@@ -1530,7 +1695,7 @@ registry.registerPath({
     description: "Fetch all inventory items. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
     },
     responses: {
         200: {
@@ -1544,7 +1709,6 @@ registry.registerPath({
     },
 });
 
-
 // update inventory
 registry.registerPath({
     method: "patch",
@@ -1554,7 +1718,7 @@ registry.registerPath({
     description: "Update inventory information. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
         body: {
             content: {
@@ -1576,7 +1740,6 @@ registry.registerPath({
     },
 });
 
-
 // delete inventory
 registry.registerPath({
     method: "delete",
@@ -1586,12 +1749,17 @@ registry.registerPath({
     description: "Delete inventory by ID. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
         200: {
             description: "Inventory deleted successfully",
+            content: {
+                "application/json": {
+                    schema: inventoryResponseSchema
+                }
+            }
         },
     },
 });
@@ -1605,7 +1773,7 @@ registry.registerPath({
     description: "Purchase inventory or items from suppliers. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
         body: {
             content: {
@@ -1627,7 +1795,6 @@ registry.registerPath({
     },
 });
 
-
 // stock out inventory
 registry.registerPath({
     method: "post",
@@ -1637,7 +1804,7 @@ registry.registerPath({
     description: "Issue inventory or items from company. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
         body: {
             content: {
@@ -1652,7 +1819,7 @@ registry.registerPath({
             description: "Stock issued successfully.",
             content: {
                 "application/json": {
-                    schema: issueInventorySchema,
+                    schema: issueInventoryResponseSchema,
                 },
             },
         },
@@ -1668,7 +1835,7 @@ registry.registerPath({
     description: "Get inventory with stock history from company. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
@@ -1683,8 +1850,6 @@ registry.registerPath({
     },
 });
 
-// stock history routes
-
 // get stock history by id
 registry.registerPath({
     method: "get",
@@ -1694,7 +1859,7 @@ registry.registerPath({
     description: "Get stock history from company. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
@@ -1718,7 +1883,7 @@ registry.registerPath({
     description: "Get all stock history from company. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
     },
     responses: {
         200: {
@@ -1741,7 +1906,7 @@ registry.registerPath({
     description: "Create a fee account for a student. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         body: {
             content: {
                 "application/json": {
@@ -1762,7 +1927,6 @@ registry.registerPath({
     },
 });
 
-
 // get fee account by id
 registry.registerPath({
     method: "get",
@@ -1772,7 +1936,7 @@ registry.registerPath({
     description: "Fetch fee account by ID. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
@@ -1787,7 +1951,6 @@ registry.registerPath({
     },
 });
 
-
 // get all fee accounts
 registry.registerPath({
     method: "get",
@@ -1797,7 +1960,7 @@ registry.registerPath({
     description: "Fetch all fee accounts. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
     },
     responses: {
         200: {
@@ -1820,7 +1983,7 @@ registry.registerPath({
     description: "Create a new course. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         body: {
             content: {
                 "application/json": {
@@ -1841,7 +2004,6 @@ registry.registerPath({
     },
 });
 
-
 // get course by id
 registry.registerPath({
     method: "get",
@@ -1851,7 +2013,7 @@ registry.registerPath({
     description: "Fetch course by ID. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
@@ -1866,7 +2028,6 @@ registry.registerPath({
     },
 });
 
-
 // get all courses
 registry.registerPath({
     method: "get",
@@ -1876,7 +2037,7 @@ registry.registerPath({
     description: "Fetch all courses. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
     },
     responses: {
         200: {
@@ -1890,31 +2051,6 @@ registry.registerPath({
     },
 });
 
-
-// get all courses with students
-registry.registerPath({
-    method: "get",
-    path: "/api/v1/companies/courses/students",
-    tags: ["Company Routes"],
-    summary: "Get All Courses With Students",
-    description: "Fetch all courses with enrolled students. Admin must provide x-company-id header; staff uses company ID from token.",
-    security: [{ bearerAuth: [] }],
-    request: {
-        headers: companyIdSchema,
-    },
-    responses: {
-        200: {
-            description: "Courses with students fetched successfully",
-            content: {
-                "application/json": {
-                    schema: coursesWithStudentsResponseSchema,
-                },
-            },
-        },
-    },
-});
-
-
 // update course
 registry.registerPath({
     method: "patch",
@@ -1924,7 +2060,7 @@ registry.registerPath({
     description: "Update course information. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
         body: {
             content: {
@@ -1946,7 +2082,6 @@ registry.registerPath({
     },
 });
 
-
 // delete course
 registry.registerPath({
     method: "delete",
@@ -1956,12 +2091,17 @@ registry.registerPath({
     description: "Delete course by ID. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
         200: {
             description: "Course deleted successfully",
+            content: {
+                "application/json": {
+                    schema: courseResponseSchema
+                }
+            }
         },
     },
 });
@@ -1975,7 +2115,7 @@ registry.registerPath({
     description: "Create a new batch. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         body: {
             content: {
                 "application/json": {
@@ -1996,7 +2136,6 @@ registry.registerPath({
     },
 });
 
-
 // get all batches
 registry.registerPath({
     method: "get",
@@ -2006,7 +2145,7 @@ registry.registerPath({
     description: "Fetch all batches. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
     },
     responses: {
         200: {
@@ -2020,7 +2159,6 @@ registry.registerPath({
     },
 });
 
-
 // get all batches with students
 registry.registerPath({
     method: "get",
@@ -2030,7 +2168,7 @@ registry.registerPath({
     description: "Fetch all batches with enrolled students. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
     },
     responses: {
         200: {
@@ -2044,7 +2182,6 @@ registry.registerPath({
     },
 });
 
-
 // get batch by id
 registry.registerPath({
     method: "get",
@@ -2054,7 +2191,7 @@ registry.registerPath({
     description: "Fetch batch by ID. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
@@ -2069,7 +2206,6 @@ registry.registerPath({
     },
 });
 
-
 // update batch
 registry.registerPath({
     method: "patch",
@@ -2079,7 +2215,7 @@ registry.registerPath({
     description: "Update batch information. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
         body: {
             content: {
@@ -2101,7 +2237,6 @@ registry.registerPath({
     },
 });
 
-
 // delete batch
 registry.registerPath({
     method: "delete",
@@ -2111,12 +2246,17 @@ registry.registerPath({
     description: "Delete batch by ID. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
         200: {
             description: "Batch deleted successfully",
+            content: {
+                "application/json": {
+                    schema: batchResponseSchema
+                }
+            }
         },
     },
 });
@@ -2130,7 +2270,7 @@ registry.registerPath({
     description: "Create a payment for a student. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         body: {
             content: {
                 "application/json": {
@@ -2151,7 +2291,6 @@ registry.registerPath({
     },
 });
 
-
 // get payment by id
 registry.registerPath({
     method: "get",
@@ -2161,7 +2300,7 @@ registry.registerPath({
     description: "Fetch payment by ID. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
     },
     responses: {
@@ -2176,7 +2315,6 @@ registry.registerPath({
     },
 });
 
-
 // get all payments
 registry.registerPath({
     method: "get",
@@ -2186,7 +2324,7 @@ registry.registerPath({
     description: "Fetch all payments. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
     },
     responses: {
         200: {
@@ -2200,18 +2338,16 @@ registry.registerPath({
     },
 });
 
-// supplier routes
-
 // create supplier
 registry.registerPath({
     method: "post",
     path: "/api/v1/companies/suppliers",
     tags: ["Company Routes"],
-    summary: "Create supplier",
-    description: "Create supplier by admin and staff. Admin must provide x-company-id header; staff uses company ID from token.",
+    summary: "Create Supplier",
+    description: "Create supplier by admin. Admin must provide x-company-id header.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         body: {
             content: {
                 "application/json": {
@@ -2221,7 +2357,7 @@ registry.registerPath({
         },
     },
     responses: {
-        200: {
+        201: {
             description: "Supplier created successfully",
             content: {
                 "application/json": {
@@ -2232,16 +2368,16 @@ registry.registerPath({
     },
 });
 
-// get all supplier
+// get all suppliers
 registry.registerPath({
     method: "get",
     path: "/api/v1/companies/suppliers",
     tags: ["Company Routes"],
-    summary: "Get all supplier",
-    description: "Get all supplier by admin and staff. Admin must provide x-company-id header; staff uses company ID from token.",
+    summary: "Get All Suppliers",
+    description: "Get all suppliers by admin and staff. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
     },
     responses: {
         200: {
@@ -2260,11 +2396,12 @@ registry.registerPath({
     method: "get",
     path: "/api/v1/companies/suppliers/{id}",
     tags: ["Company Routes"],
-    summary: "Get supplier",
+    summary: "Get Supplier By ID",
     description: "Get supplier by admin and staff. Admin must provide x-company-id header; staff uses company ID from token.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
+        params: idParamSchema,
     },
     responses: {
         200: {
@@ -2283,11 +2420,11 @@ registry.registerPath({
     method: "patch",
     path: "/api/v1/companies/suppliers/{id}",
     tags: ["Company Routes"],
-    summary: "Update supplier",
+    summary: "Update Supplier",
     description: "Update supplier by admin. Admin must provide x-company-id header.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
         body: {
             content: {
@@ -2314,16 +2451,21 @@ registry.registerPath({
     method: "delete",
     path: "/api/v1/companies/suppliers/{id}",
     tags: ["Company Routes"],
-    summary: "Delete supplier",
+    summary: "Delete Supplier",
     description: "Delete supplier by admin. Admin must provide x-company-id header.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema
     },
     responses: {
         200: {
             description: "Supplier deleted successfully",
+            content: {
+                "application/json": {
+                    schema: supplierResponseSchema
+                }
+            }
         },
     },
 });
@@ -2333,11 +2475,11 @@ registry.registerPath({
     method: "patch",
     path: "/api/v1/companies/suppliers/{id}/status",
     tags: ["Company Routes"],
-    summary: "Change supplier status",
+    summary: "Change Supplier Status",
     description: "Change supplier status by admin. Admin must provide x-company-id header.",
     security: [{ bearerAuth: [] }],
     request: {
-        headers: companyIdSchema,
+        headers: companyHeaderSchema,
         params: idParamSchema,
         body: {
             content: {
@@ -2346,7 +2488,6 @@ registry.registerPath({
                 },
             },
         },
-
     },
     responses: {
         200: {
@@ -2359,6 +2500,10 @@ registry.registerPath({
         },
     },
 });
+
+/* ========================================================================== */
+/*                             OPENAPI DOCUMENT                               */
+/* ========================================================================== */
 
 const generator = new OpenApiGeneratorV3(registry.definitions);
 
