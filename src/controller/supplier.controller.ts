@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { z } from "zod";
 import { logError } from "../config/logger.js";
-import { paginationSchema, supplierSchema } from "../schemas/request/request.dto.js";
+import { PaginationQuery } from "../schemas/request/request.dto.js";
 import {
     changeSupplierStatusService,
     createSupplierService,
@@ -11,7 +10,6 @@ import {
     updateSupplierService
 } from "../service/supplier.service.js";
 import { parseQuery } from "../utils/query.util.js";
-import AppError from "../utils/AppError.js";
 import { requireCompanyId } from "../utils/request.util.js";
 
 export const createSupplier =
@@ -19,18 +17,7 @@ export const createSupplier =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = supplierSchema.safeParse(req.body);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { supplier } = await createSupplierService(result.data, companyId);
+            const { supplier } = await createSupplierService(req.body, companyId);
 
             return res.status(200).send({
                 message: "Supplier created successfully",
@@ -48,18 +35,8 @@ export const getAllSuppliers =
         try {
 
             const companyId = requireCompanyId(req);
-            const result = paginationSchema.safeParse(req.query);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { skip, take, search, orderBy } = parseQuery(result.data);
+            const query = res.locals.query as PaginationQuery;
+            const { skip, take, search, orderBy } = parseQuery(query);
 
             const { suppliers, total } = await getAllSuppliersService(
                 skip,
@@ -106,19 +83,7 @@ export const updateSupplier =
 
             const companyId = requireCompanyId(req);
             const supplierId = req.params.id;
-
-            const result = supplierSchema.safeParse(req.body);
-
-            if (!result.success) {
-                throw new AppError(
-                    "Validation failed.",
-                    400,
-                    "VALIDATION_ERROR",
-                    z.flattenError(result.error).fieldErrors
-                );
-            }
-
-            const { supplier } = await updateSupplierService(result.data, supplierId, companyId);
+            const { supplier } = await updateSupplierService(req.body, supplierId, companyId);
 
             return res.status(200).send({
                 message: "Supplier updated successfully",

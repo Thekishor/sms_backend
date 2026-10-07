@@ -64,7 +64,7 @@ import {
 import { requireSubscription } from "../middlewares/subscription.middleware.js";
 import { createRateLimiters } from "../config/rate-limiter.js";
 import { validateParams, validateQuery, validateRequest } from "../middlewares/validate.middleware.js";
-import { batchSchema, courseSchema, feeAccountSchema, inventorySchema, paginationSchema, paramsSchema, paymentSchema, purchaseStockSchema, stockOutSchema, studentSchema, studentUpdateSchema } from "../schemas/request/request.dto.js";
+import { batchSchema, courseSchema, feeAccountSchema, inventorySchema, paginationSchema, paramsSchema, paymentSchema, purchaseStockSchema, stockOutSchema, studentSchema, studentUpdateSchema, supplierSchema } from "../schemas/request/request.dto.js";
 
 export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters>) {
 
@@ -502,6 +502,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.INVENTORY]),
         requireCompany,
         requireSubscription,
+        validateRequest(supplierSchema),
         createSupplier
     );
 
@@ -512,6 +513,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.INVENTORY]),
         requireCompany,
         requireSubscription,
+        validateQuery(paginationSchema),
         getAllSuppliers
     );
 
@@ -522,6 +524,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.INVENTORY]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
         getSupplier
     );
 
@@ -532,6 +535,8 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.INVENTORY]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
+        validateRequest(supplierSchema),
         updateSupplier
     );
 
@@ -542,6 +547,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.INVENTORY]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
         changeSupplierStatus
     );
 
@@ -552,6 +558,7 @@ export function companyRoutes(rateLimiters: ReturnType<typeof createRateLimiters
         permissionMiddleware([PERMISSIONS.INVENTORY]),
         requireCompany,
         requireSubscription,
+        validateParams(paramsSchema),
         deleteSupplier
     );
 

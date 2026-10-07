@@ -27,7 +27,7 @@ export const createSupplierService =
 
         if (existsSupplier) {
 
-            if (existsSupplier.email === email && existsSupplier.status === Status.ACTIVE) {
+            if (existsSupplier.email === email) {
                 throw new AppError(
                     "Supplier already exists with this email",
                     409,
@@ -35,7 +35,7 @@ export const createSupplierService =
                 );
             }
 
-            if (existsSupplier.phone === phone && existsSupplier.status === Status.ACTIVE) {
+            if (existsSupplier.phone === phone) {
                 throw new AppError(
                     "Supplier already exists with this phone number",
                     409,
