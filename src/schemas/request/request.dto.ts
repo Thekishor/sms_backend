@@ -24,7 +24,11 @@ const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,20}$/;
 
 export const paramsSchema = z.object({
-    id: z.string().min(1, "Request params is required")
+    id: z.string().min(1, "Request params is required").openapi({
+        type: "string",
+        example: "01a11a75-d8da-777c-bc4d-d379ee1ca3f1",
+        description: "Enter valid request params"
+    })
 });
 
 const emailField = z
@@ -36,7 +40,9 @@ const emailField = z
     })
     .transform(email => email.toLowerCase())
     .openapi({
-        example: "kishorpandey981@gmail.com"
+        type: "string",
+        example: "kishorpandey981@gmail.com",
+        description: "Enter valid email address"
     });
 
 const nameField = z
@@ -45,7 +51,9 @@ const nameField = z
     .min(3, "Name must be at least 3 characters")
     .max(50, "Name must not exceed 50 characters")
     .openapi({
-        example: "Kishor Pandey"
+        type: "string",
+        example: "Kishor Pandey",
+        description: "Enter valid name"
     });
 
 const phoneField = z
@@ -56,7 +64,9 @@ const phoneField = z
         message: "Invalid phone number",
     })
     .openapi({
-        example: "9865432109"
+        type: "string",
+        example: "9865432109",
+        description: "Enter phone number"
     });
 
 const passwordField = z
@@ -77,19 +87,25 @@ const passwordField = z
             });
         }
     }).openapi({
-        example: "Kishor@123"
+        type: "string",
+        example: "Kishor@123",
+        description: "Enter your password"
     });
 
 const rolesField = z.array(RoleSchema)
     .min(1, "At least one role is required")
     .openapi({
-        example: ["MANAGER", "ACCOUNTANT", "RECEPTIONIST", "INSTRUCTOR"]
+        type: "array",
+        example: ["MANAGER", "ACCOUNTANT", "RECEPTIONIST", "INSTRUCTOR"],
+        description: "Enter valid roles"
     });
 
 const permissionsField = z.array(PermissionSchema)
     .min(1, "At least one permission is required")
     .openapi({
-        example: ["SMS", "INVENTORY"]
+        type: "array",
+        example: ["SMS", "INVENTORY"],
+        description: "Enter valid permissions"
     });
 
 const addressField = z
@@ -97,12 +113,16 @@ const addressField = z
     .trim()
     .min(1, "Address is required")
     .openapi({
-        example: "Tilottama-4, Rupandehi"
+        type: "string",
+        example: "Tilottama-4, Rupandehi",
+        description: "Enter valid address"
     });
 
 const amountField = z.coerce.number()
     .positive("Amount must be greater than 0").openapi({
-        example: "5000"
+        type: "number",
+        example: "5000",
+        description: "Enter valid amount"
     });
 
 const descriptionField = z
@@ -111,7 +131,9 @@ const descriptionField = z
     .min(10, "Description must be at least 10")
     .max(100, "Description must be at least 50")
     .openapi({
-        example: "Please type or write short description about this field."
+        type: "string",
+        example: "sms service for students",
+        description: "Enter valid description"
     });
 
 const otpField = z
@@ -119,7 +141,9 @@ const otpField = z
     .trim()
     .min(6, "Otp is required")
     .openapi({
-        example: "857458"
+        type: "string",
+        example: "857458",
+        description: "Enter valid OTP"
     });
 
 export const loginSchema = z.object({
@@ -139,11 +163,15 @@ export const loginSchema = z.object({
             }
         )
         .openapi({
-            example: "kishorpandey981@gmail.com or 9865432109"
+            type: "string",
+            example: "kishorpandey981@gmail.com or 9865432109",
+            description: "Email address or phone number"
         }),
 
     password: z.string().min(1, "Password is required").openapi({
-        example: "Kishor@123"
+        type: "string",
+        example: "Kishor@123",
+        description: "Enter your password"
     })
 });
 
@@ -162,7 +190,9 @@ export const updateAdminSchema = z.object({
 
 export const companySchema = z.object({
     name: nameField.openapi({
-        example: "kishor techno consultancy pvt. ltd."
+        type: "string",
+        example: "kishor techno consultancy pvt. ltd.",
+        description: "Enter valid company name"
     }),
     email: emailField,
     phone: phoneField,
@@ -198,7 +228,9 @@ export const resetPasswordSchema = z.object({
     otp: otpField,
     newPassword: passwordField,
     confirmPassword: z.string().openapi({
-        example: "Kishor@123"
+        type: "string",
+        example: "Kishor@123",
+        description: "Confirm your new password"
     })
 }).refine((val) =>
     val.newPassword === val.confirmPassword, {
@@ -211,19 +243,27 @@ export const resendOtpSchema = z.object({
     email: emailField,
     type: z.enum([OtpType.EMAIL_VERIFICATION, OtpType.PASSWORD_RESET])
         .openapi({
-            example: "EMAIL_VERIFICATION or PASSWORD_RESET"
+            type: "array",
+            example: "EMAIL_VERIFICATION or PASSWORD_RESET",
+            description: "Enter valid otp type"
         })
 });
 
 export const changePasswordSchema = z.object({
     oldPassword: passwordField.openapi({
+        type: "string",
         example: "Kishor@123",
+        description: "Enter your current password"
     }),
     newPassword: passwordField.openapi({
+        type: "string",
         example: "Kishor@1234",
+        description: "Enter your new password"
     }),
     confirmPassword: z.string().openapi({
-        example: "Kishor@1234"
+        type: "string",
+        example: "Kishor@1234",
+        description: "Confirm your new password"
     })
 }).refine((val) =>
     val.newPassword === val.confirmPassword, {
@@ -233,10 +273,14 @@ export const changePasswordSchema = z.object({
 
 export const changeStaffPasswordSchema = z.object({
     newPassword: passwordField.openapi({
+        type: "string",
         example: "Kishor@1234",
+        description: "Enter your new password"
     }),
     confirmPassword: z.string().openapi({
-        example: "Kishor@1234"
+        type: "string",
+        example: "Kishor@1234",
+        description: "Confirm your new password"
     })
 }).refine((val) =>
     val.newPassword === val.confirmPassword, {
@@ -253,103 +297,143 @@ export const studentSchema = z.object({
         example: "Ram Pandey"
     }),
     guardianPhone: phoneField.openapi({
-        example: "9868786543"
+        type: "string",
+        example: "9868786543",
+        description: "Enter valid guardian phone number"
     }),
     joiningDate: z.coerce.date().openapi({
-        example: "2026-01-01"
+        type: "string",
+        example: "2026-01-01",
+        description: "Enter valid joining date"
     }),
     batchId: z
         .string()
         .trim()
         .min(1, "Batch Id is required")
         .openapi({
-            example: "01KV207DBJJ5HT40BPVCAW5X6Z"
+            type: "string",
+            example: "01KV207DBJJ5HT40BPVCAW5X6Z",
+            description: "Enter valid batch id"
         }),
     courseId: z
         .string()
         .trim()
         .min(1, "Course Id is required")
         .openapi({
-            example: "019ec404-0bb1-71e3-ae4d-c020fad6cab5"
+            type: "string",
+            example: "019ec404-0bb1-71e3-ae4d-c020fad6cab5",
+            description: "Enter valid course id"
         }),
 })
 
 export const studentUpdateSchema = z.object({
     fullName: nameField,
     email: emailField.openapi({
-        example: "kishorpandey981@gmail.com"
+        type: "string",
+        example: "kishorpandey981@gmail.com",
+        description: "Enter valid email address"
     }),
     phone: phoneField.openapi({
-        example: "9840001234"
+        type: "string",
+        example: "9840001234",
+        description: "Enter valid phone number"
     }),
     address: addressField,
     guardianName: nameField.openapi({
-        example: "Ram Pandey"
+        type: "string",
+        example: "Ram Pandey",
+        description: "Enter valid guardian name"
     }),
     guardianPhone: phoneField.openapi({
-        example: "9840003400"
+        type: "string",
+        example: "9840003400",
+        description: "Enter valid guardian phone number"
     }),
 })
 
 export const batchSchema = z.object({
     name: nameField.openapi({
-        example: "FullStack-2026-B01-EVN"
+        type: "string",
+        example: "FullStack-2026-B01-EVN",
+        description: "Enter valid batch name"
     }),
     startDate: z.coerce.date().openapi({
-        example: "2026-01-01"
+        type: "string",
+        example: "2026-01-01",
+        description: "Enter valid start date"
     }),
     capacity: z
         .number()
         .min(1, "Capacity must be at least 1")
         .max(100, "Capacity cannot exceed 100")
         .openapi({
-            example: 30
+            type: "number",
+            example: 30,
+            description: "Enter valid batch capacity"
         }),
 })
 
 export const courseSchema = z.object({
     name: nameField.openapi({
+        type: "string",
         example: "Full Stack Development",
+        description: "Enter valid course name"
     }),
     price: amountField,
     duration: z.string()
         .min(1, "Course duration is required")
         .openapi({
-            example: "45"
+            type: "string",
+            example: "45",
+            description: "Enter valid course duration"
         }),
     description: descriptionField.openapi({
+        type: "string",
         example: "Full stack development",
+        description: "Enter valid course description"
     })
 })
 
 export const inventorySchema = z.object({
     name: nameField.openapi({
-        example: "Desktop"
+        type: "string",
+        example: "Desktop",
+        description: "Enter valid inventory name"
     }),
     minStock: z.coerce.number()
         .int()
         .openapi({
-            example: 10
+            type: "number",
+            example: 10,
+            description: "Enter valid minimum stock level"
         }),
     measures: z.enum(UnitOfMeasure)
         .openapi({
-            example: "PIECE, BOX, PACK, DOZEN, KILOGRAM, GRAM, TON, LITER, MILLILITER, METER, or CENTIMETER"
+            type: "string",
+            example: "PIECE, BOX, PACK, DOZEN, KILOGRAM, GRAM, TON, LITER, MILLILITER, METER, or CENTIMETER",
+            description: "Select valid unit of measure"
         }),
     description: descriptionField.openapi({
-        example: "Hp Victus Desktop"
+        type: "string",
+        example: "Hp Victus Desktop",
+        description: "Enter valid inventory description"
     })
 });
 
 export const paymentSchema = z.object({
     amount: amountField,
     date: z.coerce.date().openapi({
-        example: "2026-01-01"
+        type: "string",
+        example: "2026-01-01",
+        description: "Enter valid payment date"
     }),
     description: descriptionField,
     studentId: z.string()
         .min(1, "Student id is required")
         .openapi({
-            example: "01KV20AYPTKWBJQTMTKA4Q340Y"
+            type: "string",
+            example: "01KV20AYPTKWBJQTMTKA4Q340Y",
+            description: "Enter valid student id"
         }),
 });
 
@@ -357,31 +441,43 @@ export const feeAccountSchema = z.object({
     studentId: z.string()
         .min(1, "Student id is required")
         .openapi({
-            example: "01KV20AYPTKWBJQTMTKA4Q340Y"
+            type: "string",
+            example: "01KV20AYPTKWBJQTMTKA4Q340Y",
+            description: "Enter valid student id"
         }),
     discountType: z.enum(DiscountType).openapi({
-        example: "PERCENT or FIXED"
+        type: "string",
+        example: "PERCENT or FIXED",
+        description: "Select valid discount type"
     }),
     discountValue: amountField,
     discountNote: z.string()
         .min(1, "Discount note is required")
         .max(100, "Discount note cannot exceed 100")
         .openapi({
-            example: "Dashain festival discount"
+            type: "string",
+            example: "Dashain festival discount",
+            description: "Enter valid discount note"
         }),
     paymentPlan: z.enum(PaymentPlan)
         .openapi({
-            example: "INSTALLMENT, ADVANCE, or FULL"
+            type: "string",
+            example: "INSTALLMENT, ADVANCE, or FULL",
+            description: "Select valid payment plan"
         }),
     paymentStatus: z.enum(PaymentStatus)
         .openapi({
-            example: "DUE, PARTIAL, or PAID"
+            type: "string",
+            example: "DUE, PARTIAL, or PAID",
+            description: "Select valid payment status"
         }),
 })
 
 export const supplierSchema = z.object({
     name: nameField.openapi({
-        example: "kishor computer and techno shop"
+        type: "string",
+        example: "kishor computer and techno shop",
+        description: "Enter valid supplier name"
     }),
     email: emailField,
     phone: phoneField,
@@ -392,22 +488,32 @@ export const purchaseStockSchema = z.object({
     supplierId: z.string()
         .min(1, "Supplier Id is required")
         .openapi({
-            example: "019ec404-9983-7dee-b84d-8edfc25a561e"
+            type: "string",
+            example: "019ec404-9983-7dee-b84d-8edfc25a561e",
+            description: "Enter valid supplier id"
         }),
     quantity: z.coerce
         .number().positive()
         .min(1, "Quantity is required").openapi({
-            example: "50"
+            type: "number",
+            example: "50",
+            description: "Enter valid quantity"
         }),
     purchasePrice: z.coerce.string()
         .openapi({
-            example: "5000"
+            type: "string",
+            example: "5000",
+            description: "Enter valid purchase price"
         }),
     reason: z.enum(StockMovementReason).openapi({
-        example: "PURCHASE or ISSUE or RETURN or DAMAGE or LOST or MANUAL_ADJUSTMENT"
+        type: "string",
+        example: "PURCHASE or ISSUE or RETURN or DAMAGE or LOST or MANUAL_ADJUSTMENT",
+        description: "Select valid reason for stock movement"
     }),
     expiryDate: z.coerce.date().optional().openapi({
-        example: "2026-06-03"
+        type: "string",
+        example: "2026-06-03",
+        description: "Enter valid expiry date"
     }),
     remarks: descriptionField
 
@@ -415,12 +521,16 @@ export const purchaseStockSchema = z.object({
 
 export const stockOutSchema = z.object({
     reason: z.enum(StockMovementReason).openapi({
-        example: "PURCHASE or ISSUE or RETURN or DAMAGE or LOST or MANUAL_ADJUSTMENT"
+        type: "string",
+        example: "PURCHASE or ISSUE or RETURN or DAMAGE or LOST or MANUAL_ADJUSTMENT",
+        description: "Select valid reason for stock movement"
     }),
     quantity: z.coerce
         .number().positive()
         .min(1, "Quantity is required").openapi({
-            example: "50"
+            type: "number",
+            example: "50",
+            description: "Enter valid quantity"
         }),
     remarks: descriptionField
 
@@ -428,15 +538,25 @@ export const stockOutSchema = z.object({
 
 export const subscriptionSchema = z.object({
     type: z.enum(SubscriptionType).openapi({
-        example: "TRIAL or PAID"
+        type: "string",
+        example: "TRIAL or PAID",
+        description: "Select valid subscription type"
     }),
     startDate: z.coerce.date().openapi({
-        example: "2026-06-03"
+        type: "string",
+        example: "2026-06-03",
+        description: "Enter valid start date"
     }),
     endDate: z.coerce.date().openapi({
-        example: "2026-08-30"
+        type: "string",
+        example: "2026-08-30",
+        description: "Enter valid end date"
     }),
-    amount: z.coerce.number().min(0, "Amount cannot be negative"),
+    amount: z.coerce.number().min(0, "Amount cannot be negative").openapi({
+        type: "number",
+        example: "5000",
+        description: "Enter valid amount"
+    }),
     remarks: descriptionField
 
 })
@@ -449,10 +569,14 @@ export const subscriptionPaymentSchema = z.object({
         .max(12, "Maximum subscription duration is 12 months."),
     amount: amountField,
     paymentMethod: z.enum(PaymentMethod).openapi({
-        example: "CASH or BANK_TRANSFER or QR or CHEQUE or OTHER"
+        type: "string",
+        example: "CASH or BANK_TRANSFER or QR or CHEQUE or OTHER",
+        description: "Select valid payment method"
     }),
     referenceNumber: z.string().optional().openapi({
-        example: "20260706B1Q0001C002345"
+        type: "string",
+        example: "20260706B1Q0001C002345",
+        description: "Enter valid reference number"
     }),
     remarks: descriptionField
 });
