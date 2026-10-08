@@ -367,9 +367,22 @@ export const resetPassword =
 
         const passwordHash = await hashPassword(newPassword);
 
-        await prisma.admin.update({
-            where: { id: admin.id },
-            data: { password: passwordHash }
+        await prisma.$transaction(async (tx) => {
+
+            await tx.admin.update({
+                where: { id: admin.id },
+                data: {
+                    password: passwordHash,
+                    tokenVersion: { increment: 1 },
+                }
+            });
+
+            await tx.session.deleteMany({
+                where: {
+                    userId: admin.id,
+                    revoked: false
+                }
+            });
         });
 
         // del from redis
@@ -402,9 +415,22 @@ export const changedPassword =
 
         const passwordHash = await hashPassword(newPassword);
 
-        await prisma.admin.update({
-            where: { id: admin.id },
-            data: { password: passwordHash }
+        await prisma.$transaction(async (tx) => {
+
+            await tx.admin.update({
+                where: { id: admin.id },
+                data: {
+                    password: passwordHash,
+                    tokenVersion: { increment: 1 }
+                }
+            });
+
+            await tx.session.deleteMany({
+                where: {
+                    userId: admin.id,
+                    revoked: false
+                }
+            });
         });
 
     }
