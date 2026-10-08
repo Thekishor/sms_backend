@@ -1,16 +1,18 @@
 import { Socket, Server } from "socket.io";
 import logger from "../config/logger.js";
-import { SocketStore } from "./socketStore.js";
-
 export class SocketHandler {
 
     // listening on 'io' (server level)
     public static register(io: Server): void {
         io.on("connection", (socket: Socket) => {
-            
+
             logger.info(`Client connected: ${socket.id}`);
-            logger.info(`Client Auth Token: ${socket.handshake.auth.Token}`);
             logger.info(`Client IP: ${socket.handshake.address}`);
+
+            // all devices belonging to user are in the same room.
+            const userId = socket.data.user.sub;
+            logger.info(`User ${userId} joined room user:${userId}`);
+            void socket.join(`user:${userId}`);
 
             this.handleError(socket);
             this.handleDisconnect(socket);
@@ -25,12 +27,6 @@ export class SocketHandler {
 
     private static handleDisconnect(socket: Socket): void {
         socket.on("disconnect", () => {
-            const userId = SocketStore.getUserId(socket.id);
-            
-            if (userId) {
-                SocketStore.removeUser(userId);
-
-            }
             logger.info(`Client disconnected: ${socket.id}`);
         });
     }

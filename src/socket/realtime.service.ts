@@ -1,27 +1,50 @@
-import logger from "../config/logger.js";
+import { logError } from "../config/logger.js";
+import { prisma } from "../config/prisma.js";
 import { getIO } from "./socket.js";
-import { SocketStore } from "./socketStore.js";
 
-export class RealtimeService {
+export const notifySuperAdmin = async (
+    type: string,
+    title: string,
+    message: string,
+    data: unknown
+) => {
 
-    public static notifySuperAdmin(event: string, data: unknown): void {
+    try {
         const io = getIO();
-        io.emit(event, data);
-    }
 
-    public static notifyAdmin(adminId: string, event: string, data: unknown): void {
-        const io = getIO();
+        const superAdmins = await prisma.superAdmin.findMany({
+            select: { id: true }
+        });
 
-        const sockets = SocketStore.getSocketIds(adminId);
-        logger.info(`Looking for socket of admin: ${adminId}`);
-
-        if (sockets) {
-            // Admin is online
-            sockets.forEach((socketId) => {
-                io.to(socketId).emit(event, data);
-            });
-        } else {
-            logger.warn("Unable to send events to admin due to offline mode");
+        if (superAdmins.length === 0) {
+            return;
         }
+
+        for (const superAdmin of superAdmins) {
+            const roomName = `user:${superAdmin.id}`;
+            const room = io.sockets.adapter.rooms.get(roomName);
+
+            const notification = {
+                type, title, message, data
+            };
+
+            if (room && room.size > 0) {
+                // super admin is online
+                io.to(roomName).emit("notification", notification);
+            } else {
+                // Super Admin is offline
+                await prisma.notification.create({
+                    data: {
+                        recipientId: superAdmin.id,
+                        title,
+                        message,
+                        isRead: false
+                    }
+                });
+            }
+        }
+
+    } catch (error) {
+        logError("Failed to notify super admins", error);
     }
 }

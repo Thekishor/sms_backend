@@ -19,9 +19,11 @@ import {
 } from "../schemas/response/response.dto.js";
 import { redisOperation } from "../utils/redis.operation.js";
 import { mapCompany } from "./company.service.js";
-import { createNotificationForAdmin, createNotificationForSuperAdmin } from "./notification.service.js";
+import { createNotificationForAdmin } from "./notification.service.js";
 import { sendEmailToAdmin } from "./email.service.js";
 import { acquiredLock, releaseLock } from "../utils/redis.lock.js";
+import { notifySuperAdmin } from "../socket/realtime.service.js";
+import { NotificationEvent } from "../utils/notification-events.js";
 
 export const register =
     async (data: CreateAdminDto):
@@ -114,12 +116,18 @@ export const register =
             }
         });
 
-        // Save notification in database for super admins
-        await createNotificationForSuperAdmin(
-            "New Admin Registered",
-            `A new admin has registered in the system: ${registerAdmin.fullName}.`,
-            "new_admin",
-            { admin: registerAdmin }
+        // send notification to super admin via socket.io
+        await notifySuperAdmin(
+            NotificationEvent.ADMIN_REGISTERED,
+            "New Admin Registration",
+            "A new admin has registered.",
+            {
+                admin: {
+                    id: registerAdmin.id,
+                    fullName: registerAdmin.fullName,
+                    email: registerAdmin.email
+                }
+            }
         );
 
         let otp: string;

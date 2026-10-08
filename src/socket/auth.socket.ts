@@ -16,7 +16,7 @@ export const authenticateSocketToken = (token: string) => {
                 payload
             };
         }
-    } catch {}
+    } catch { }
 
     // try admin / staff
     try {
@@ -30,7 +30,7 @@ export const authenticateSocketToken = (token: string) => {
                 payload
             };
         }
-    } catch {}
+    } catch { }
 
     throw new AppError("Unauthorized", 401, "UNAUTHORIZED");
 

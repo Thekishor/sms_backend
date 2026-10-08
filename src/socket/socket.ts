@@ -2,7 +2,7 @@ import { Server, Socket } from "socket.io";
 import { Server as HttpServer } from "node:http";
 import AppError from "../utils/AppError.js";
 import { authenticateSocketToken } from "./auth.socket.js";
-import { SocketStore } from "./socketStore.js";
+import { logError } from "../config/logger.js";
 
 let io: Server;
 
@@ -28,23 +28,13 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
 
             const { payload } = authenticateSocketToken(token);
 
-            const { sub, sid, type, version } = payload;
-
-            if (!sub || !sid || !type || typeof version !== "number") {
-                throw new AppError("Invalid token payload", 401, "INVALID_TOKEN");
-            }
-
             socket.data.user = payload;
-
-            SocketStore.addUser(
-                sub,
-                socket.id
-            );
 
             next();
 
-        } catch {
-            return next(new AppError("Unauthorized", 401, "UNAUTHORIZED"));
+        } catch (error) {
+            logError("Socket authentication error:", error);
+            return next(error instanceof Error ? error : new AppError("Unauthorized", 401, "UNAUTHORIZED"));
         }
     });
 
