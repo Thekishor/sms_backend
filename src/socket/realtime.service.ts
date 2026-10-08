@@ -29,7 +29,7 @@ export const notifySuperAdmin = async (
             };
 
             if (room && room.size > 0) {
-                // super admin is online
+                // Super Admin is online
                 io.to(roomName).emit("notification", notification);
             } else {
                 // Super Admin is offline
@@ -46,5 +46,42 @@ export const notifySuperAdmin = async (
 
     } catch (error) {
         logError("Failed to notify super admins", error);
+    }
+}
+
+export const notifyAdmin = async (
+    adminId: string,
+    type: string,
+    title: string,
+    message: string,
+    data: unknown
+) => {
+    try {
+        const io = getIO();
+
+        const roomName = `user:${adminId}`;
+        const room = io.sockets.adapter.rooms.get(roomName);
+
+        const notification = {
+            type, title, message, data
+        };
+
+        if (room && room.size > 0) {
+            // Admin is online
+            io.to(roomName).emit("notification", notification);
+        } else {
+            // Admin is offline
+            await prisma.notification.create({
+                data: {
+                    recipientId: adminId,
+                    title,
+                    message,
+                    isRead: false
+                }
+            });
+        }
+
+    } catch (error) {
+        logError("Failed to notify admin", error);
     }
 }

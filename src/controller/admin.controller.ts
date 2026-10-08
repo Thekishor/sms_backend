@@ -160,9 +160,9 @@ export const deleteAdminById =
     async (req: Request, res: Response, next: NextFunction) => {
         try {
 
-            const superAdminId = requireSuperAdmin(req);
+            requireSuperAdmin(req);
             const adminId = req.params.id;
-            await deleteAdmin(adminId, superAdminId);
+            await deleteAdmin(adminId);
 
             return res.status(200).json({
                 message: "Admin deleted successfully"

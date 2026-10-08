@@ -19,10 +19,9 @@ import {
 } from "../schemas/response/response.dto.js";
 import { redisOperation } from "../utils/redis.operation.js";
 import { mapCompany } from "./company.service.js";
-import { createNotificationForAdmin } from "./notification.service.js";
 import { sendEmailToAdmin } from "./email.service.js";
 import { acquiredLock, releaseLock } from "../utils/redis.lock.js";
-import { notifySuperAdmin } from "../socket/realtime.service.js";
+import { notifyAdmin, notifySuperAdmin } from "../socket/realtime.service.js";
 import { NotificationEvent } from "../utils/notification-events.js";
 
 export const register =
@@ -597,7 +596,7 @@ export const getAllCompaniesWithAdminService =
     }
 
 export const deleteAdmin =
-    async (adminId: string, superAdminId: string) => {
+    async (adminId: string) => {
 
         const admin = await prisma.admin.findUnique({
             where: { id: adminId }
@@ -642,13 +641,16 @@ export const adminStatus =
             }
         });
 
-        // save notification in database for admin
-        await createNotificationForAdmin(
+        // send notification for admin via socket.io
+        await notifyAdmin(
             updatedAdmin.id,
+            NotificationEvent.ACCOUNT_STATUS_UPDATED,
             "Account Status Updated",
             `Your account status has been changed to ${updatedAdmin.status}.`,
-            "admin_status_updated",
-            { admin: updatedAdmin }
+            {
+                adminId: updatedAdmin.id,
+                status: updatedAdmin.status
+            }
         )
 
         // del from redis

@@ -233,7 +233,7 @@ export const getAllSubscriptionsService =
     }
 
 export const updateSubscriptionService =
-    async (superAdminId: string, subscriptionId: string):
+    async (subscriptionId: string):
         Promise<{
             subscription: SubscriptionResponseDto["subscription"]
         }> => {

@@ -96,10 +96,10 @@ export const getAllSubscriptions =
 export const updateSubscription =
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const superAdminId = requireSuperAdmin(req);
+            requireSuperAdmin(req);
             const subscriptionId = req.params.id;
 
-            const { subscription } = await updateSubscriptionService(superAdminId, subscriptionId);
+            const { subscription } = await updateSubscriptionService(subscriptionId);
 
             return res.status(200).send({
                 message: "Subscription cancelled successfully",

@@ -7,8 +7,8 @@ import { prisma } from "../config/prisma.js";
 import AppError, { STATUS_ERROR } from "../utils/AppError.js";
 import { Company, Prisma, Status, SubscriptionPaymentStatus, SubscriptionType } from "@prisma/client";
 import { redisOperation } from "../utils/redis.operation.js";
-import { RealtimeService } from "../socket/realtime.service.js";
-import { createNotificationForSuperAdmin } from "./notification.service.js";
+import { notifyAdmin, notifySuperAdmin } from "../socket/realtime.service.js";
+import { NotificationEvent } from "../utils/notification-events.js";
 
 export const createCompanyService =
     async (data: CompanyDto, adminId: string):
@@ -99,12 +99,15 @@ export const createCompanyService =
             return company;
         });
 
-        // Save notification in database for super admins
-        await createNotificationForSuperAdmin(
-            "New Company Registered",
-            `A new company has registered: ${createdCompany.name}`,
-            "new_company",
-            { company: createdCompany }
+        // new company register and notify to super admin
+        await notifySuperAdmin(
+            NotificationEvent.COMPANY_REGISTERED,
+            "New Company Registration",
+            "A new company has registered and is awaiting your approval.",
+            {
+                companyId: createdCompany.id,
+                companyName: createdCompany.name
+            }
         );
 
         // del from redis
@@ -354,32 +357,15 @@ export const updateCompanyStatus =
             }
         });
 
-        // notify admin (socket.io)
-        RealtimeService.notifyAdmin(
-            updatedCompany.createdBy,
-            "active_company",
-            {
-                message: `Company status updated to ${status}`,
-                company: {
-                    id: updatedCompany.id,
-                    name: updatedCompany.name,
-                    email: updatedCompany.email,
-                    phone: updatedCompany.phone,
-                    address: updatedCompany.address,
-                    status: updatedCompany.status,
-                    createdBy: updatedCompany.createdBy,
-                    createdAt: updatedCompany.createdAt,
-                    updatedAt: updatedCompany.updatedAt,
-                }
-            }
-        )
-
-        // also notify super admin room so their companies list updates live
-        RealtimeService.notifySuperAdmin(
-            "company_status_updated",
+        // notify admin after super admin changed company status
+        await notifyAdmin(
+            company.createdBy,
+            NotificationEvent.COMPANY_STATUS_UPDATED,
+            "Company Status Updated",
+            `Your company status has been changed to ${updatedCompany.status}.`,
             {
                 companyId: updatedCompany.id,
-                status: updatedCompany.status,
+                status: updatedCompany.status
             }
         );
 
