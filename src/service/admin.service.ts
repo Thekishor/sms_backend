@@ -636,8 +636,7 @@ export const adminStatus =
                 id: adminId,
             },
             data: {
-                status,
-                approvedBy: superAdminId
+                status
             }
         });
 
