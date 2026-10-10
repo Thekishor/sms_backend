@@ -72,9 +72,9 @@ export const SUBSCRIPTION_REMINDER_TEMPLATE = (
   return `
 <div style="margin:0;padding:20px;background:#F8FAFC;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
 
-  <div style="max-width:460px;margin:0 auto;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;padding:24px;">
+  <div style="max-width:460px;margin:0 auto;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:14px;padding:26px;box-shadow:0 4px 14px rgba(15,23,42,0.05);border-top:3px solid #6366F1;">
 
-    <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;color:#111827;">
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;letter-spacing:-0.5px;color:#111827;">
       ${title}
     </h1>
 
@@ -82,19 +82,23 @@ export const SUBSCRIPTION_REMINDER_TEMPLATE = (
       Hello,
     </p>
 
-    <p style="margin:0 0 20px;color:#4B5563;font-size:16px;line-height:1.6;">
-      This is a reminder that the subscription for <strong>${companyName}</strong> will expire in <strong>${daysRemaining} days</strong>.
+    <p style="margin:0 0 20px;color:#4B5563;font-size:15px;line-height:1.7;">
+      This is a reminder that the subscription for <strong style="color:#111827;">${companyName}</strong> will expire in <strong style="color:#D97706;">${daysRemaining} days</strong>.
     </p>
 
-    <p style="margin:0 0 8px;color:#111827;font-size:15px;">
-      <strong>Subscription Type:</strong> ${subscriptionType}
-    </p>
+    <div style="margin:0 0 20px;padding:15px;background:#F8FAFC;border:1px solid #E5E7EB;border-radius:9px;">
 
-    <p style="margin:0 0 20px;color:#111827;font-size:15px;">
-      <strong>Expiry Date:</strong> ${expiryDate}
-    </p>
+      <p style="margin:0 0 12px;color:#374151;font-size:14px;line-height:1.6;">
+        <strong style="color:#111827;">Subscription Type:</strong> ${subscriptionType}
+      </p>
 
-    <p style="margin:0 0 20px;color:#4B5563;font-size:15px;line-height:1.6;">
+      <p style="margin:0;color:#374151;font-size:14px;line-height:1.6;">
+        <strong style="color:#111827;">Expiry Date:</strong> ${expiryDate}
+      </p>
+
+    </div>
+
+    <p style="margin:0;color:#4B5563;font-size:15px;line-height:1.7;">
       ${message}
     </p>
 
