@@ -69,34 +69,11 @@ export const createCompanyService =
             );
         }
 
-        const createdCompany = await prisma.$transaction(async (tx) => {
-
-            // create company first
-            const company = await tx.company.create({
-                data: {
-                    name, email, phone, address, createdBy: adminId, status: Status.PENDING
-                }
-            });
-
-            // Create 15-day trial subscription
-            const subStart = new Date();
-            const subEnd = new Date(subStart);
-            subEnd.setDate(subEnd.getDate() + 15);
-            let duration = Math.ceil((subEnd.getTime() - subStart.getTime()) / (1000 * 60 * 60 * 24));
-
-            await tx.subscription.create({
-                data: {
-                    companyId: company.id,
-                    type: SubscriptionType.TRIAL,
-                    duration,
-                    startDate: subStart,
-                    endDate: subEnd,
-                    amount: new Prisma.Decimal(0),
-                    paymentStatus: SubscriptionPaymentStatus.NOT_APPLICABLE
-                }
-            });
-
-            return company;
+        // create company first
+        const createdCompany = await prisma.company.create({
+            data: {
+                name, email, phone, address, createdBy: adminId, status: Status.PENDING
+            }
         });
 
         // new company register and notify to super admin
@@ -348,13 +325,37 @@ export const updateCompanyStatus =
             throw new AppError("Company not found", 404, "COMPANY_NOT_FOUND");
         }
 
-        const updatedCompany = await prisma.company.update({
-            where: {
-                id: company.id
-            },
-            data: {
-                status
-            }
+        const updatedCompany = await prisma.$transaction(async (tx) => {
+
+            // update company status
+            const updatedCompany = await prisma.company.update({
+                where: {
+                    id: company.id
+                },
+                data: {
+                    status
+                }
+            });
+
+            // Create 15-day trial subscription
+            const subStart = new Date();
+            const subEnd = new Date(subStart);
+            subEnd.setDate(subEnd.getDate() + 15);
+            let duration = Math.ceil((subEnd.getTime() - subStart.getTime()) / (1000 * 60 * 60 * 24));
+
+            await tx.subscription.create({
+                data: {
+                    companyId: company.id,
+                    type: SubscriptionType.TRIAL,
+                    duration,
+                    startDate: subStart,
+                    endDate: subEnd,
+                    amount: new Prisma.Decimal(0),
+                    paymentStatus: SubscriptionPaymentStatus.NOT_APPLICABLE
+                }
+            });
+
+            return updatedCompany;
         });
 
         // notify admin after super admin changed company status

@@ -345,23 +345,6 @@ export const reminderMailForCompany =
         );
     }
 
-
-export function mapSubscription(subscription: Subscription) {
-    return {
-        id: subscription.id,
-        companyId: subscription.companyId,
-        type: subscription.type,
-        duration: subscription.duration,
-        startDate: subscription.startDate,
-        endDate: subscription.endDate,
-        amount: subscription.amount.toString(),
-        status: subscription.status,
-        paymentStatus: subscription.paymentStatus,
-        createdAt: subscription.createdAt,
-        updatedAt: subscription.updatedAt
-    }
-}
-
 export const getCompanyActiveSubscriptionService =
     async (companyId: string): Promise<{
         subscription: SubscriptionResponseDto["subscription"] | null
@@ -416,3 +399,19 @@ export const cancelTrialSubscriptionService =
 
         return { subscription: mapSubscription(cancelledSubscription) };
     }
+
+export function mapSubscription(subscription: Subscription) {
+    return {
+        id: subscription.id,
+        companyId: subscription.companyId,
+        type: subscription.type,
+        duration: subscription.duration,
+        startDate: subscription.startDate,
+        endDate: subscription.endDate,
+        amount: subscription.amount.toString(),
+        status: subscription.status,
+        paymentStatus: subscription.paymentStatus,
+        createdAt: subscription.createdAt,
+        updatedAt: subscription.updatedAt
+    }
+}
