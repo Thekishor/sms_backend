@@ -153,12 +153,11 @@ export const changedCompanyStatus =
 
             const superAdminId = requireSuperAdmin(req);
             const companyId = req.params.id;
-            const status = req.body.status.trim();
 
-            const { company } = await updateCompanyStatus(companyId, status, superAdminId);
+            const { company } = await updateCompanyStatus(companyId, req.body, superAdminId);
 
             return res.status(200).json({
-                message: "Companies status changed successfully",
+                message: "Companies status updated successfully",
                 company
             });
 

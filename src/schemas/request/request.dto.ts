@@ -6,6 +6,7 @@ import {
     PaymentPlan,
     PaymentStatus,
     Role,
+    Status,
     StockMovementReason,
     SubscriptionType,
     UnitOfMeasure
@@ -559,7 +560,20 @@ export const subscriptionSchema = z.object({
     }),
     remarks: descriptionField
 
-})
+});
+
+export const changeCompanyStatusSchema = z.object({
+    status: z.enum(Status).openapi({
+        type: "string",
+        example: "ACTIVE",
+        description: "Enter valid status type"
+    }),
+    reason: z.string().openapi({
+        type: "string",
+        example: "Due to non-payment of subscription",
+        description: "Enter valid reason for update company status"
+    })
+});
 
 export const subscriptionPaymentSchema = z.object({
     month: z.coerce
@@ -613,3 +627,4 @@ export type StockOutDto = z.infer<typeof stockOutSchema>;
 export type SubscriptionDto = z.infer<typeof subscriptionSchema>;
 export type SubscriptionPaymentDto = z.infer<typeof subscriptionPaymentSchema>;
 export type PaginationQuery = z.infer<typeof paginationSchema>;
+export type ChangeCompanyStatusDto = z.infer<typeof changeCompanyStatusSchema>;

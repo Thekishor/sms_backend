@@ -174,12 +174,6 @@ export const COMPANY_STATUS_UPDATE = (
       </p>
     </div>
 
-    <div style="padding:14px 24px;background:#F8FAFC;border-top:1px solid #E2E8F0;">
-      <p style="margin:0;font-size:12px;line-height:1.6;color:#94A3B8;text-align:center;">
-        This is an automated email regarding your company account.
-      </p>
-    </div>
-
   </div>
 </div>
   `

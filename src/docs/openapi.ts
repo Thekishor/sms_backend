@@ -26,7 +26,8 @@ import {
     supplierSchema,
     stockOutSchema,
     purchaseStockSchema,
-    subscriptionPaymentSchema
+    subscriptionPaymentSchema,
+    changeCompanyStatusSchema
 } from "../schemas/request/request.dto.js";
 import {
     adminLoginResponseSchema,
@@ -515,7 +516,7 @@ registry.registerPath({
         body: {
             content: {
                 "application/json": {
-                    schema: statusSchema
+                    schema: changeCompanyStatusSchema
                 },
             },
         },

@@ -1,4 +1,4 @@
-import { EMAIL_TEMPLATES, OTP_TEMPLATE, SUBSCRIPTION_REMINDER_TEMPLATE } from "../utils/templates.js";
+import { COMPANY_STATUS_UPDATE, EMAIL_TEMPLATES, OTP_TEMPLATE, SUBSCRIPTION_REMINDER_TEMPLATE } from "../utils/templates.js";
 import { logError } from "../config/logger.js";
 import AppError from "../utils/AppError.js";
 import { emailQueue } from "../queues/email.queue.js";
@@ -129,4 +129,49 @@ export async function sendEmailToCompany(
         );
     }
 
+}
+
+export async function sendCompanyStatusMail(
+    email: string,
+    adminName: string,
+    companyName: string,
+    oldStatus: string,
+    newStatus: string,
+    reason: string
+) {
+
+    const companyStatusTemplate = COMPANY_STATUS_UPDATE(
+        adminName, companyName, oldStatus, newStatus, reason
+    );
+
+    const subject = "Company Status Update Notification";
+
+    try {
+
+        await emailQueue.add("company-status-update", {
+            email,
+            subject,
+            companyStatusTemplate
+        }, {
+            removeOnComplete: {
+                age: 300,
+            },
+            removeOnFail: {
+                age: 300
+            },
+            attempts: 3,
+            backoff: {
+                type: "exponential",
+                delay: 5000,
+            }
+        })
+    } catch (error) {
+        logError("Failed to queue company status update mail:", error);
+
+        throw new AppError(
+            "Unable to process company status update email. Please try again.",
+            503,
+            "EMAIL_QUEUE_ERROR"
+        );
+    }
 }

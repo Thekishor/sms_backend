@@ -71,6 +71,7 @@ model Company {
   address   String
   status    Status   @default(INACTIVE)
   createdBy String
+  reason    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

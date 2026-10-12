@@ -102,6 +102,7 @@ CREATE TABLE "companies" (
     "address" TEXT NOT NULL,
     "status" "Status" NOT NULL DEFAULT 'INACTIVE',
     "createdBy" TEXT NOT NULL,
+    "reason" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

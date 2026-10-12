@@ -11,9 +11,7 @@ const worker = new Worker(
         if (job.name === "email-verification") {
 
             const { email, subject, emailVerificationTemplate } = job.data;
-
             await sendEmail(email, subject, emailVerificationTemplate);
-
             logger.info(`Verification mail sent to ${email}`);
         }
 
@@ -21,9 +19,7 @@ const worker = new Worker(
         if (job.name === "password-reset") {
 
             const { email, subject, passwordResetTemplate } = job.data;
-
             await sendEmail(email, subject, passwordResetTemplate);
-
             logger.info(`Password reset mail sent to ${email}`);
         }
 
@@ -31,10 +27,16 @@ const worker = new Worker(
         if (job.name === "subscription-expiry") {
 
             const { email, subject, subscriptionExpiryTemplate } = job.data;
-
             await sendEmail(email, subject, subscriptionExpiryTemplate);
-
             logger.info(`Subscription expiry mail sent to ${email}`);
+        }
+
+        // for company status update
+        if (job.name === "company-status-update") {
+
+            const { email, subject, companyStatusTemplate } = job.data;
+            await sendEmail(email, subject, companyStatusTemplate);
+            logger.info(`Company status update mail sent to ${email}`);
         }
     },
     {

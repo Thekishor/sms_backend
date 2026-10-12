@@ -1,4 +1,4 @@
-import { CompanyDto } from "../schemas/request/request.dto.js";
+import { ChangeCompanyStatusDto, CompanyDto } from "../schemas/request/request.dto.js";
 import {
     CompaniesResponseDto,
     CompanyResponseDto
@@ -9,6 +9,7 @@ import { Company, Prisma, Status, SubscriptionPaymentStatus, SubscriptionType } 
 import { redisOperation } from "../utils/redis.operation.js";
 import { notifyAdmin, notifySuperAdmin } from "../socket/realtime.service.js";
 import { NotificationEvent } from "../utils/notification-events.js";
+import { sendCompanyStatusMail } from "./email.service.js";
 
 export const createCompanyService =
     async (data: CompanyDto, adminId: string):
@@ -304,12 +305,14 @@ export const getAllCompanies =
     }
 
 export const updateCompanyStatus =
-    async (companyId: string, status: Status, superAdminId: string):
+    async (companyId: string, data: ChangeCompanyStatusDto, superAdminId: string):
         Promise<{
             company: CompanyResponseDto["company"];
         }> => {
 
         const companyStatus: Status[] = [Status.ACTIVE, Status.INACTIVE, Status.PENDING, Status.REJECTED];
+
+        const { status, reason } = data;
 
         if (!companyStatus.includes(status)) {
             throw new AppError("Invalid status value", 400, "INVALID_STATUS");
@@ -318,6 +321,18 @@ export const updateCompanyStatus =
         const company = await prisma.company.findUnique({
             where: {
                 id: companyId,
+            },
+            select: {
+                id: true,
+                name: true,
+                status: true,
+                createdBy: true,
+                admin: {
+                    select: {
+                        email: true,
+                        fullName: true
+                    }
+                }
             }
         });
 
@@ -333,7 +348,8 @@ export const updateCompanyStatus =
                     id: company.id
                 },
                 data: {
-                    status
+                    status,
+                    reason
                 }
             });
 
@@ -371,6 +387,16 @@ export const updateCompanyStatus =
                 companyId: updatedCompany.id,
                 status: updatedCompany.status
             }
+        );
+
+        // send email to company admin about status change
+        await sendCompanyStatusMail(
+            company.admin.email,
+            company.admin.fullName,
+            company.name,
+            company.status,
+            updatedCompany.status,
+            updatedCompany.reason ?? ""
         );
 
         // delete from redis

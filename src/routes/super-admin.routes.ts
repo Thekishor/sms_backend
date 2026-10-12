@@ -35,7 +35,7 @@ import {
     updateNotificationReadStatus
 } from "../controller/notification.controller.js";
 import { validateParams, validateQuery, validateRequest } from "../middlewares/validate.middleware.js";
-import { paginationSchema, paramsSchema, subscriptionPaymentSchema } from "../schemas/request/request.dto.js";
+import { changeCompanyStatusSchema, paginationSchema, paramsSchema, subscriptionPaymentSchema } from "../schemas/request/request.dto.js";
 
 const router = Router();
 
@@ -79,6 +79,7 @@ router.patch(
     "/companies/:id/status",
     verifySuperAdminToken,
     validateParams(paramsSchema),
+    validateRequest(changeCompanyStatusSchema),
     changedCompanyStatus
 );
 
