@@ -341,6 +341,10 @@ export const updateCompanyStatus =
             throw new AppError("Company not found", 404, "COMPANY_NOT_FOUND");
         }
 
+        if (company.status === Status.ACTIVE) {
+            throw new AppError("Company is already active", 400, "COMPANY_ALREADY_ACTIVE");
+        }
+
         const updatedCompany = await prisma.$transaction(async (tx) => {
 
             // update company status

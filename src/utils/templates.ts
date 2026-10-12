@@ -162,14 +162,16 @@ export const COMPANY_STATUS_UPDATE = (
 
       </div>
 
-      <div style="margin-top:18px;padding:14px 16px;background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:4px;">
-        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#92400E;">
-          Reason:
-        </p>
-        <p style="margin:0;font-size:14px;line-height:1.7;color:#78350F;">
-          ${reason}
-        </p>
-      </div>
+      ${newStatus !== "ACTIVE" ? `
+        <div style="margin-top:18px;padding:14px 16px;background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:4px;">
+          <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#92400E;">
+            Reason:
+          </p>
+          <p style="margin:0;font-size:14px;color:#78350F;">
+            ${reason}
+          </p>
+        </div>
+       ` : ""}
 
       <p style="margin:20px 0 0;font-size:14px;line-height:1.7;color:#475569;">
         If you have any questions regarding this update, please contact the support team.
