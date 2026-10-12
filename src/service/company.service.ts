@@ -90,6 +90,7 @@ export const createCompanyService =
 
         // del from redis
         await redisOperation.del(`admin:${adminId}:companies:*`);
+        await redisOperation.del(`superadmin:*:companies:*`);
 
         return {
             company: mapCompany(createdCompany)

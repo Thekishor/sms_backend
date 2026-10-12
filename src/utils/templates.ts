@@ -117,63 +117,70 @@ export const COMPANY_STATUS_UPDATE = (
 ) => {
   return `
   <div style="margin:0;padding:24px;background:#F8FAFC;font-family:Arial,Helvetica,sans-serif;color:#334155;">
-  <div style="max-width:560px;margin:0 auto;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">
+  <div style="max-width:560px;margin:0 auto;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">
 
-    <div style="padding:22px 24px;border-bottom:1px solid #E2E8F0;">
-      <h2 style="margin:0;font-size:20px;color:#0F172A;">
+    <div style="padding:24px;background:#F1F5F9;border-bottom:1px solid #E2E8F0;">
+      <h2 style="margin:0;font-size:21px;color:#0F172A;">
         Company Status Update
       </h2>
-      <p style="margin:8px 0 0;font-size:14px;color:#64748B;">
-        An update regarding your company account.
-      </p>
     </div>
 
     <div style="padding:24px;">
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.7;">
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.7;">
         Hello ${adminName},
       </p>
 
-      <p style="margin:0 0 18px;font-size:14px;line-height:1.7;">
-        The status of your company account has been updated.
+      <p style="margin:0 0 20px;font-size:14px;line-height:1.7;color:#475569;">
+        Your company account status has been updated by the administration team.
         Please review the details below.
       </p>
 
-      <div style="padding:16px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;">
-        <p style="margin:0 0 12px;font-size:13px;color:#64748B;">
-          Company Name
+      <div style="padding:18px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;">
+
+        <p style="margin:0 0 6px;font-size:12px;color:#64748B;">
+          COMPANY NAME
         </p>
-        <p style="margin:0 0 18px;font-size:15px;font-weight:bold;color:#0F172A;">
+        <p style="margin:0 0 18px;font-size:15px;font-weight:600;color:#0F172A;">
           ${companyName}
         </p>
 
-        <p style="margin:0 0 8px;font-size:13px;color:#64748B;">
-          Previous Status
+        <p style="margin:0 0 6px;font-size:12px;color:#64748B;">
+          PREVIOUS STATUS
         </p>
         <p style="margin:0 0 16px;font-size:14px;color:#475569;">
           ${oldStatus}
         </p>
 
-        <p style="margin:0 0 8px;font-size:13px;color:#64748B;">
-          New Status
+        <div style="padding:12px 14px;background:#EFF6FF;border:1px solid #DBEAFE;border-radius:6px;">
+          <p style="margin:0 0 5px;font-size:12px;color:#1D4ED8;">
+            NEW STATUS
+          </p>
+          <p style="margin:0;font-size:16px;font-weight:700;color:#1D4ED8;">
+            ${newStatus}
+          </p>
+        </div>
+
+      </div>
+
+      <div style="margin-top:18px;padding:14px 16px;background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:4px;">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#92400E;">
+          Reason:
         </p>
-        <p style="margin:0;font-size:15px;font-weight:bold;color:#2563EB;">
-          ${newStatus}
+        <p style="margin:0;font-size:14px;line-height:1.7;color:#78350F;">
+          ${reason}
         </p>
       </div>
 
-      ${reason}
-
       <p style="margin:20px 0 0;font-size:14px;line-height:1.7;color:#475569;">
-        If you have any questions about this update, please contact the
-        support team.
+        If you have any questions regarding this update, please contact the support team.
       </p>
 
-      <p style="margin:22px 0 0;font-size:14px;line-height:1.7;">
+      <p style="margin:22px 0 0;font-size:14px;line-height:1.7;color:#334155;">
         Regards,<br />
         <strong>Support Team</strong>
       </p>
-    </div>
 
+    </div>
   </div>
 </div>
   `

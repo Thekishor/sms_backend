@@ -19,7 +19,7 @@ export const createCompany =
             const { company } = await createCompanyService(req.body, adminId);
 
             return res.status(200).json({
-                message: "Company registered successfully. Please wait for approval.",
+                message: "Company registered successfully. Please wait for super admin approval.",
                 company,
             });
 
