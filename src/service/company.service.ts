@@ -337,23 +337,26 @@ export const updateCompanyStatus =
                 }
             });
 
-            // Create 15-day trial subscription
-            const subStart = new Date();
-            const subEnd = new Date(subStart);
-            subEnd.setDate(subEnd.getDate() + 15);
-            let duration = Math.ceil((subEnd.getTime() - subStart.getTime()) / (1000 * 60 * 60 * 24));
+            if (updatedCompany.status === Status.ACTIVE) {
 
-            await tx.subscription.create({
-                data: {
-                    companyId: company.id,
-                    type: SubscriptionType.TRIAL,
-                    duration,
-                    startDate: subStart,
-                    endDate: subEnd,
-                    amount: new Prisma.Decimal(0),
-                    paymentStatus: SubscriptionPaymentStatus.NOT_APPLICABLE
-                }
-            });
+                // Create 15-day trial subscription
+                const subStart = new Date();
+                const subEnd = new Date(subStart);
+                subEnd.setDate(subEnd.getDate() + 15);
+                let duration = Math.ceil((subEnd.getTime() - subStart.getTime()) / (1000 * 60 * 60 * 24));
+
+                await tx.subscription.create({
+                    data: {
+                        companyId: company.id,
+                        type: SubscriptionType.TRIAL,
+                        duration,
+                        startDate: subStart,
+                        endDate: subEnd,
+                        amount: new Prisma.Decimal(0),
+                        paymentStatus: SubscriptionPaymentStatus.NOT_APPLICABLE
+                    }
+                });
+            }
 
             return updatedCompany;
         });

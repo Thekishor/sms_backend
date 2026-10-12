@@ -107,3 +107,80 @@ export const SUBSCRIPTION_REMINDER_TEMPLATE = (
 </div>
 `;
 };
+
+export const COMPANY_STATUS_UPDATE = (
+  adminName: string,
+  companyName: string,
+  oldStatus: string,
+  newStatus: string,
+  reason: string
+) => {
+  return `
+  <div style="margin:0;padding:24px;background:#F8FAFC;font-family:Arial,Helvetica,sans-serif;color:#334155;">
+  <div style="max-width:560px;margin:0 auto;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;">
+
+    <div style="padding:22px 24px;border-bottom:1px solid #E2E8F0;">
+      <h2 style="margin:0;font-size:20px;color:#0F172A;">
+        Company Status Update
+      </h2>
+      <p style="margin:8px 0 0;font-size:14px;color:#64748B;">
+        An update regarding your company account.
+      </p>
+    </div>
+
+    <div style="padding:24px;">
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.7;">
+        Hello ${adminName},
+      </p>
+
+      <p style="margin:0 0 18px;font-size:14px;line-height:1.7;">
+        The status of your company account has been updated.
+        Please review the details below.
+      </p>
+
+      <div style="padding:16px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;">
+        <p style="margin:0 0 12px;font-size:13px;color:#64748B;">
+          Company Name
+        </p>
+        <p style="margin:0 0 18px;font-size:15px;font-weight:bold;color:#0F172A;">
+          ${companyName}
+        </p>
+
+        <p style="margin:0 0 8px;font-size:13px;color:#64748B;">
+          Previous Status
+        </p>
+        <p style="margin:0 0 16px;font-size:14px;color:#475569;">
+          ${oldStatus}
+        </p>
+
+        <p style="margin:0 0 8px;font-size:13px;color:#64748B;">
+          New Status
+        </p>
+        <p style="margin:0;font-size:15px;font-weight:bold;color:#2563EB;">
+          ${newStatus}
+        </p>
+      </div>
+
+      ${reason}
+
+      <p style="margin:20px 0 0;font-size:14px;line-height:1.7;color:#475569;">
+        If you have any questions about this update, please contact the
+        support team.
+      </p>
+
+      <p style="margin:22px 0 0;font-size:14px;line-height:1.7;">
+        Regards,<br />
+        <strong>Support Team</strong>
+      </p>
+    </div>
+
+    <div style="padding:14px 24px;background:#F8FAFC;border-top:1px solid #E2E8F0;">
+      <p style="margin:0;font-size:12px;line-height:1.6;color:#94A3B8;text-align:center;">
+        This is an automated email regarding your company account.
+      </p>
+    </div>
+
+  </div>
+</div>
+  `
+}
